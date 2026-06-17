@@ -1,6 +1,6 @@
 # DiscoCast promo — standalone Node container.
 # Serves the promo page AND counts page views + per-OS downloads itself.
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 
 # curl for Coolify/Docker healthchecks
