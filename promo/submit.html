@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Share a preset — DiscoCast</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f; --panel: #14141c; --panel-2: #1b1b25; --line: #2a2a36;
+      --text: #ecedf3; --muted: #8d8da0; --accent: #8b5cf6; --accent-2: #ec4899;
+      --good: #34d399; --bad: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: radial-gradient(1200px 600px at 50% -10%, #1a1430, var(--bg));
+      color: var(--text); font: 15px/1.6 'Inter', -apple-system, system-ui, sans-serif;
+      display: grid; place-items: center; padding: 24px; -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, .brand { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+    .card {
+      width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--line);
+      border-radius: 20px; padding: 30px 28px; box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; margin-bottom: 22px; }
+    .brand img { width: 26px; height: 26px; }
+
+    /* progress */
+    .steps { display: flex; gap: 6px; margin-bottom: 24px; }
+    .steps .seg { flex: 1; height: 5px; border-radius: 3px; background: var(--panel-2); transition: background .25s; }
+    .steps .seg.done { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    .step-label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+    input[type=text], input[type=email], textarea {
+      width: 100%; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+      border-radius: 11px; padding: 12px 14px; font: inherit; outline: none; transition: border-color .15s;
+    }
+    textarea { resize: vertical; min-height: 92px; }
+    input:focus, textarea:focus { border-color: var(--accent); }
+
+    .drop {
+      border: 1.5px dashed var(--line); border-radius: 14px; padding: 26px; text-align: center;
+      color: var(--muted); cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .drop:hover, .drop.has { border-color: var(--accent); background: #161226; color: var(--text); }
+    .drop strong { color: var(--text); }
+    .preview { margin-top: 12px; border-radius: 12px; max-height: 180px; width: 100%; object-fit: cover; display: none; }
+
+    .row { display: flex; gap: 10px; margin-top: 22px; }
+    .btn {
+      border: 0; border-radius: 11px; padding: 12px 16px; font-weight: 600; font-size: 15px; cursor: pointer;
+      color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex: 1; font-family: inherit;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.ghost { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .err { color: var(--bad); font-size: 13px; min-height: 18px; margin-top: 10px; }
+
+    .review dt { color: var(--muted); font-size: 12px; margin-top: 14px; }
+    .review dd { margin: 3px 0 0; font-size: 14px; word-break: break-word; }
+    .review img { margin-top: 8px; border-radius: 10px; max-height: 150px; }
+
+    .done { text-align: center; padding: 12px 0; }
+    .done .check { width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 50%;
+      background: #14352a; color: var(--good); display: grid; place-items: center; font-size: 30px; }
+    /* honeypot — hidden from humans, tempting for bots */
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><img src="/logo.png" alt="">DiscoCast</div>
+    <div class="steps" id="bars"></div>
+
+    <form id="form" novalidate>
+      <!-- honeypot -->
+      <div class="hp"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+      <!-- Step 1: preset + name + description -->
+      <div class="screen" data-step="0">
+        <div class="step-label">Step 1 of 5</div>
+        <h1>Your preset</h1>
+        <p class="sub">Upload the <strong>.json</strong> you exported from DiscoCast, and name it.</p>
+        <div class="drop" id="preset-drop">
+          <div id="preset-text"><strong>Choose preset .json</strong><br>or drop it here</div>
+        </div>
+        <input type="file" id="preset-input" accept=".json,application/json" class="hidden">
+        <div class="field" style="margin-top:18px">
+          <label for="name">Preset name</label>
+          <input type="text" id="name" maxlength="80" placeholder="e.g. Neon Tunnel">
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" maxlength="1000" placeholder="What makes it cool? How does it react to music?"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: image -->
+      <div class="screen hidden" data-step="1">
+        <div class="step-label">Step 2 of 5</div>
+        <h1>Preview image</h1>
+        <p class="sub">A screenshot or thumbnail so people can see it at a glance.</p>
+        <div class="drop" id="image-drop">
+          <div id="image-text"><strong>Choose an image</strong><br>PNG, JPG, WEBP or GIF</div>
+        </div>
+        <input type="file" id="image-input" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden">
+        <img class="preview" id="image-preview" alt="">
+      </div>
+
+      <!-- Step 3: email -->
+      <div class="screen hidden" data-step="2">
+        <div class="step-label">Step 3 of 5</div>
+        <h1>Your email</h1>
+        <p class="sub">So we can reach you about your submission. Not shown publicly.</p>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" maxlength="120" placeholder="you@example.com">
+        </div>
+      </div>
+
+      <!-- Step 4: review -->
+      <div class="screen hidden" data-step="3">
+        <div class="step-label">Step 4 of 5</div>
+        <h1>Review</h1>
+        <p class="sub">Check everything looks right before you submit.</p>
+        <dl class="review" id="review"></dl>
+      </div>
+
+      <!-- Step 5: submit/success -->
+      <div class="screen hidden" data-step="4">
+        <div class="done">
+          <div class="check">✓</div>
+          <h1>Submitted for review</h1>
+          <p class="sub">Thanks! Your preset is in the queue. We'll review it before it goes public.</p>
+          <a class="btn ghost" href="/" style="display:inline-block;text-decoration:none;text-align:center">Back to site</a>
+        </div>
+      </div>
+
+      <div class="err" id="err"></div>
+      <div class="row" id="nav">
+        <button type="button" class="btn ghost" id="back">Back</button>
+        <button type="button" class="btn" id="next">Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const TOTAL = 5;
+    let step = 0;
+    const state = { preset: null, image: null };
+
+    // progress bars
+    const bars = $('#bars');
+    for (let i = 0; i < TOTAL; i++) { const d = document.createElement('div'); d.className = 'seg'; bars.appendChild(d); }
+    const segs = [...bars.children];
+
+    function show(n) {
+      step = n;
+      document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('hidden', +s.dataset.step !== n));
+      segs.forEach((s, i) => s.classList.toggle('done', i <= n));
+      $('#err').textContent = '';
+      $('#back').classList.toggle('hidden', n === 0 || n === TOTAL - 1);
+      $('#nav').classList.toggle('hidden', n === TOTAL - 1);
+      $('#next').textContent = n === 3 ? 'Submit for review' : 'Continue';
+      if (n === 3) buildReview();
+    }
+
+    // ── file pickers ──
+    function wireDrop(dropId, inputId, onFile) {
+      const drop = $('#' + dropId), input = $('#' + inputId);
+      drop.addEventListener('click', () => input.click());
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('has'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('has'));
+      drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('has');
+        if (e.dataTransfer.files[0]) { input.files = e.dataTransfer.files; onFile(e.dataTransfer.files[0]); } });
+      input.addEventListener('change', () => input.files[0] && onFile(input.files[0]));
+    }
+    wireDrop('preset-drop', 'preset-input', (f) => {
+      state.preset = f; $('#preset-drop').classList.add('has');
+      $('#preset-text').innerHTML = `<strong>${f.name}</strong><br>ready`;
+    });
+    wireDrop('image-drop', 'image-input', (f) => {
+      state.image = f; $('#image-drop').classList.add('has');
+      $('#image-text').innerHTML = `<strong>${f.name}</strong><br>looks good`;
+      const url = URL.createObjectURL(f); const img = $('#image-preview'); img.src = url; img.style.display = 'block';
+    });
+
+    // ── validation per step ──
+    function validate() {
+      const e = $('#err');
+      if (step === 0) {
+        if (!state.preset) return (e.textContent = 'Please choose your preset .json file.', false);
+        if (!state.preset.name.toLowerCase().endsWith('.json')) return (e.textContent = 'That doesn’t look like a .json file.', false);
+        if (!$('#name').value.trim()) return (e.textContent = 'Please give your preset a name.', false);
+        if (!$('#description').value.trim()) return (e.textContent = 'Please add a short description.', false);
+      }
+      if (step === 1) {
+        if (!state.image) return (e.textContent = 'Please add a preview image.', false);
+        if (!state.image.type.startsWith('image/')) return (e.textContent = 'That file isn’t an image.', false);
+      }
+      if (step === 2) {
+        const v = $('#email').value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return (e.textContent = 'Please enter a valid email.', false);
+      }
+      return true;
+    }
+
+    function buildReview() {
+      $('#review').innerHTML = `
+        <dt>Name</dt><dd>${esc($('#name').value)}</dd>
+        <dt>Description</dt><dd>${esc($('#description').value)}</dd>
+        <dt>Preset file</dt><dd>${esc(state.preset?.name || '')}</dd>
+        <dt>Email</dt><dd>${esc($('#email').value)}</dd>
+        <dt>Image</dt><dd><img src="${state.image ? URL.createObjectURL(state.image) : ''}" alt=""></dd>`;
+    }
+
+    $('#back').addEventListener('click', () => show(Math.max(0, step - 1)));
+    $('#next').addEventListener('click', async () => {
+      if (!validate()) return;
+      if (step < 3) return show(step + 1);
+      await submit(); // step 3 → submit
+    });
+
+    async function submit() {
+      const btn = $('#next'); btn.disabled = true; btn.textContent = 'Submitting…';
+      const fd = new FormData();
+      fd.append('name', $('#name').value.trim());
+      fd.append('description', $('#description').value.trim());
+      fd.append('email', $('#email').value.trim());
+      fd.append('website', $('input[name=website]').value); // honeypot
+      fd.append('preset', state.preset);
+      fd.append('image', state.image);
+      try {
+        const r = await fetch('/api/submit', { method: 'POST', body: fd });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.error || 'Something went wrong.');
+        show(4);
+      } catch (err) {
+        $('#err').textContent = err.message;
+      } finally { btn.disabled = false; btn.textContent = 'Submit for review'; }
+    }
+
+    function esc(s) { return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+    show(0);
+  </script>
+</body>
+</html>

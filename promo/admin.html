@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>DiscoCast — Admin</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f; --panel: #14141c; --panel-2: #1b1b25; --line: #2a2a36;
+      --text: #ecedf3; --muted: #8d8da0; --accent: #8b5cf6; --accent-2: #ec4899;
+      --good: #34d399; --bad: #f87171; --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.5 'Inter', -apple-system, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, .brand { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+    button { font-family: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Password gate ── */
+    #gate {
+      position: fixed; inset: 0; z-index: 50;
+      display: grid; place-items: center; padding: 24px;
+      background: radial-gradient(1200px 600px at 50% -10%, #1a1430, var(--bg));
+    }
+    .gate-card {
+      width: 100%; max-width: 380px; background: var(--panel);
+      border: 1px solid var(--line); border-radius: 18px; padding: 32px 28px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .gate-card .logo { width: 44px; height: 44px; margin-bottom: 18px; }
+    .gate-card h1 { font-size: 22px; margin: 0 0 6px; }
+    .gate-card p { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
+    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+    input[type=password], input[type=text], input[type=email], textarea {
+      width: 100%; background: var(--panel-2); border: 1px solid var(--line);
+      color: var(--text); border-radius: 11px; padding: 12px 14px; font: inherit; outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    .btn {
+      border: 0; border-radius: 11px; padding: 12px 16px; font-weight: 600; font-size: 15px;
+      color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      width: 100%; margin-top: 16px;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.ghost { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); }
+    .btn.sm { width: auto; padding: 8px 13px; font-size: 13px; margin: 0; }
+    .err { color: var(--bad); font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+    /* ── App shell ── */
+    .wrap { max-width: 920px; margin: 0 auto; padding: 26px 20px 80px; }
+    header.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 19px; font-weight: 700; }
+    .brand img { width: 30px; height: 30px; }
+    .tabs { display: flex; gap: 6px; background: var(--panel); border: 1px solid var(--line);
+            border-radius: 13px; padding: 5px; margin-bottom: 24px; width: fit-content; }
+    .tab { border: 0; background: transparent; color: var(--muted); padding: 9px 16px;
+           border-radius: 9px; font-weight: 600; font-size: 14px; }
+    .tab.active { background: var(--panel-2); color: var(--text); }
+    .tab .badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 6px;
+                  background: var(--accent); color: #fff; border-radius: 9px; font-size: 11px;
+                  line-height: 18px; text-align: center; }
+
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+    .stat .k { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .stat .v { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 700;
+               font-variant-numeric: tabular-nums; }
+    .meta { color: var(--muted); font-size: 13px; display: flex; justify-content: space-between;
+            align-items: center; gap: 14px; flex-wrap: wrap; }
+    @media (max-width: 680px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+
+    .filters { display: flex; gap: 7px; margin-bottom: 16px; flex-wrap: wrap; }
+    .chip { border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+            border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; }
+    .chip.active { color: var(--text); border-color: var(--accent); background: #1c1730; }
+
+    .sub { display: grid; grid-template-columns: 120px 1fr auto; gap: 16px;
+           background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+           padding: 14px; margin-bottom: 12px; align-items: center; }
+    .sub img { width: 120px; height: 84px; object-fit: cover; border-radius: 10px;
+               background: var(--panel-2); }
+    .sub .name { font-weight: 600; font-size: 16px; }
+    .sub .desc { color: var(--muted); font-size: 13.5px; margin: 4px 0 7px;
+                 display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sub .info { color: var(--muted); font-size: 12.5px; }
+    .sub .actions { display: flex; flex-direction: column; gap: 7px; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px;
+           font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+    .tag.pending { background: #3a2e10; color: var(--warn); }
+    .tag.approved { background: #0f3326; color: var(--good); }
+    .tag.rejected { background: #3a1717; color: var(--bad); }
+    .btn.good { background: #14352a; color: var(--good); border: 1px solid #1d513e; }
+    .btn.bad  { background: #351717; color: var(--bad);  border: 1px solid #512020; }
+    .empty { color: var(--muted); text-align: center; padding: 60px 0; }
+    a.link { color: var(--accent); text-decoration: none; font-size: 13px; }
+    @media (max-width: 680px) { .sub { grid-template-columns: 90px 1fr; } .sub img { width: 90px; height: 64px; }
+      .sub .actions { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; } }
+  </style>
+</head>
+<body>
+  <!-- Password gate -->
+  <div id="gate">
+    <div class="gate-card">
+      <img class="logo" src="/favicon.svg" alt="">
+      <h1>Admin access</h1>
+      <p>Enter the admin key to manage stats and preset submissions.</p>
+      <form id="gate-form">
+        <div class="field">
+          <label for="key">Admin key</label>
+          <input id="key" type="password" autocomplete="current-password" autofocus>
+        </div>
+        <button class="btn" type="submit">Unlock</button>
+        <div class="err" id="gate-err"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div class="wrap hidden" id="app">
+    <header class="top">
+      <div class="brand"><img src="/logo.png" alt="">DiscoCast Admin</div>
+      <button class="btn ghost sm" id="logout">Lock</button>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="stats">Stats</button>
+      <button class="tab" data-tab="subs">Submissions <span class="badge hidden" id="pending-badge">0</span></button>
+    </div>
+
+    <!-- Stats -->
+    <section id="panel-stats">
+      <div class="cards">
+        <div class="stat"><div class="k">Page views</div><div class="v" id="s-views">—</div></div>
+        <div class="stat"><div class="k">Downloads · macOS</div><div class="v" id="s-mac">—</div></div>
+        <div class="stat"><div class="k">Downloads · Windows</div><div class="v" id="s-win">—</div></div>
+        <div class="stat"><div class="k">Downloads · total</div><div class="v" id="s-total">—</div></div>
+      </div>
+      <div class="meta">
+        <span id="s-meta">—</span>
+        <button class="btn bad sm" id="reset">Reset stats</button>
+      </div>
+    </section>
+
+    <!-- Submissions -->
+    <section id="panel-subs" class="hidden">
+      <div class="filters" id="filters">
+        <button class="chip active" data-f="pending">Pending</button>
+        <button class="chip" data-f="approved">Approved</button>
+        <button class="chip" data-f="rejected">Rejected</button>
+        <button class="chip" data-f="all">All</button>
+      </div>
+      <div id="sub-list"></div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const KEY_STORE = 'discocast-admin-key';
+    let KEY = sessionStorage.getItem(KEY_STORE) || '';
+    let SUBS = [];
+    let filter = 'pending';
+
+    function api(path, opts = {}) {
+      return fetch(path, { ...opts, headers: { 'x-admin-key': KEY, ...(opts.headers || {}) } });
+    }
+
+    // ── Auth ──
+    async function tryUnlock(key) {
+      const r = await fetch('/api/stats', { headers: { 'x-admin-key': key } });
+      return r.ok;
+    }
+    $('#gate-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = $('#key').value.trim();
+      $('#gate-err').textContent = '';
+      if (await tryUnlock(key)) {
+        KEY = key; sessionStorage.setItem(KEY_STORE, key);
+        enterApp();
+      } else {
+        $('#gate-err').textContent = 'Wrong key. Try again.';
+      }
+    });
+    $('#logout').addEventListener('click', () => {
+      sessionStorage.removeItem(KEY_STORE); location.reload();
+    });
+
+    async function enterApp() {
+      $('#gate').classList.add('hidden');
+      $('#app').classList.remove('hidden');
+      await Promise.all([loadStats(), loadSubs()]);
+    }
+
+    // ── Tabs ──
+    document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      $('#panel-stats').classList.toggle('hidden', tab !== 'stats');
+      $('#panel-subs').classList.toggle('hidden', tab !== 'subs');
+    }));
+
+    // ── Stats ──
+    async function loadStats() {
+      const r = await api('/api/stats');
+      if (!r.ok) return;
+      const c = await r.json();
+      $('#s-views').textContent = c.pageViews ?? 0;
+      $('#s-mac').textContent = c.downloads.mac ?? 0;
+      $('#s-win').textContent = c.downloads.windows ?? 0;
+      $('#s-total').textContent = c.total ?? 0;
+      const since = c.firstSeen ? new Date(c.firstSeen).toLocaleString() : '—';
+      const upd = c.updated ? new Date(c.updated).toLocaleString() : '—';
+      $('#s-meta').textContent = `Counting since ${since} · last update ${upd}`;
+    }
+    $('#reset').addEventListener('click', async () => {
+      if (!confirm('Reset all stats to zero? This cannot be undone.')) return;
+      await api('/api/stats/reset', { method: 'POST' });
+      loadStats();
+    });
+
+    // ── Submissions ──
+    document.querySelectorAll('.chip').forEach((c) => c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach((x) => x.classList.remove('active'));
+      c.classList.add('active'); filter = c.dataset.f; renderSubs();
+    }));
+
+    async function loadSubs() {
+      const r = await api('/api/submissions');
+      if (!r.ok) return;
+      SUBS = await r.json();
+      const pending = SUBS.filter((s) => s.status === 'pending').length;
+      const badge = $('#pending-badge');
+      badge.textContent = pending;
+      badge.classList.toggle('hidden', pending === 0);
+      renderSubs();
+    }
+
+    function renderSubs() {
+      const list = filter === 'all' ? SUBS : SUBS.filter((s) => s.status === filter);
+      const el = $('#sub-list');
+      if (!list.length) { el.innerHTML = `<div class="empty">No ${filter === 'all' ? '' : filter} submissions.</div>`; return; }
+      el.innerHTML = list.map((s) => `
+        <div class="sub" data-id="${s.id}">
+          <img src="/api/submissions/${s.id}/image?key=${encodeURIComponent(KEY)}" alt="" loading="lazy">
+          <div>
+            <div class="name">${esc(s.name)} <span class="tag ${s.status}">${s.status}</span></div>
+            <div class="desc">${esc(s.description)}</div>
+            <div class="info">${esc(s.email)} · ${new Date(s.createdAt).toLocaleString()}
+              · <a class="link" href="/api/submissions/${s.id}/preset?key=${encodeURIComponent(KEY)}">preset.json</a></div>
+          </div>
+          <div class="actions">
+            ${s.status !== 'approved' ? `<button class="btn good sm" data-act="approve">Approve</button>` : ''}
+            ${s.status !== 'rejected' ? `<button class="btn bad sm" data-act="reject">Reject</button>` : ''}
+            <button class="btn ghost sm" data-act="delete">Delete</button>
+          </div>
+        </div>`).join('');
+      el.querySelectorAll('.sub').forEach((row) => {
+        row.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => act(row.dataset.id, b.dataset.act)));
+      });
+    }
+
+    async function act(id, action) {
+      if (action === 'delete' && !confirm('Delete this submission permanently?')) return;
+      const method = action === 'delete' ? 'DELETE' : 'POST';
+      const url = action === 'delete' ? `/api/submissions/${id}` : `/api/submissions/${id}/${action}`;
+      await api(url, { method });
+      loadSubs();
+    }
+
+    function esc(s) { return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+    // ── Boot: if a stored key still works, skip the gate ──
+    (async () => { if (KEY && await tryUnlock(KEY)) enterApp(); })();
+  </script>
+</body>
+</html>
