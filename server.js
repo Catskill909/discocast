@@ -91,7 +91,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- counting middleware (runs BEFORE static, then passes through) ----------
+// --- bot / non-human filtering ---------------------------------------------
+// A fresh public domain gets hammered by health checks, crawlers, security
+// scanners, and link-preview unfurlers. We only want to count real humans, so:
+//   - page views require a browser-style Accept: text/html
+//   - both views and downloads skip known bot / tool user-agents (and empty UAs)
+const BOT_UA = /bot|crawl|spider|slurp|mediapartners|facebookexternalhit|embedly|quora|pinterest|redditbot|slackbot|telegram|whatsapp|discord|skypeuripreview|preview|monitor|uptime|pingdom|statuscake|curl|wget|python-requests|go-http-client|java\/|okhttp|headless|phantomjs|axios|libwww|scrapy|httpclient|apache-httpclient/i;
+
+function isBot(req) {
+  const ua = req.headers['user-agent'] || '';
+  return !ua || BOT_UA.test(ua);
+}
+
+function acceptsHtml(req) {
+  return (req.headers['accept'] || '').includes('text/html');
+}
+
 // A download counts once per "fresh" GET. Browsers triggered by the `download`
 // attribute issue a single plain GET; resumable/range fetches send a Range
 // header for the continuation — we only count the start so retries don't inflate.
@@ -100,19 +115,20 @@ function isFreshGet(req) {
   return !r || r.startsWith('bytes=0-');
 }
 
+// --- counting middleware (runs BEFORE static, then passes through) ----------
 app.use((req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (req.method !== 'GET') return next();
+  if (isBot(req)) return next(); // never count bots/tools/health checks
+
   let p = req.path;
   try { p = decodeURIComponent(req.path); } catch { /* keep raw */ }
 
-  if (req.method === 'GET') {
-    if (p === MAC_FILE && isFreshGet(req)) {
-      counts.downloads.mac++; saveCounts();
-    } else if (p === WIN_FILE && isFreshGet(req)) {
-      counts.downloads.windows++; saveCounts();
-    } else if (p === '/' || p === '/index.html') {
-      counts.pageViews++; saveCounts();
-    }
+  if (p === MAC_FILE && isFreshGet(req)) {
+    counts.downloads.mac++; saveCounts();
+  } else if (p === WIN_FILE && isFreshGet(req)) {
+    counts.downloads.windows++; saveCounts();
+  } else if ((p === '/' || p === '/index.html') && acceptsHtml(req)) {
+    counts.pageViews++; saveCounts();
   }
   next();
 });
