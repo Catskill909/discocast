@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+
+# Runtime counters — live on the Coolify volume in prod, never committed.
+data/*
+!data/.gitkeep
+
+# NOTE: the installers (promo/*.dmg, promo/*.exe) are intentionally NOT ignored.
+# They are committed with this repo and shipped to users by this app.
