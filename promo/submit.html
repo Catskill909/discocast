@@ -202,12 +202,14 @@
       if (step === 0) {
         if (!state.preset) return (e.textContent = 'Please choose your preset .json file.', false);
         if (!state.preset.name.toLowerCase().endsWith('.json')) return (e.textContent = 'That doesn’t look like a .json file.', false);
+        if (state.preset.size > 80 * 1024 * 1024) return (e.textContent = 'That preset file is over 80 MB — please use a smaller one.', false);
         if (!$('#name').value.trim()) return (e.textContent = 'Please give your preset a name.', false);
         if (!$('#description').value.trim()) return (e.textContent = 'Please add a short description.', false);
       }
       if (step === 1) {
         if (!state.image) return (e.textContent = 'Please add a preview image.', false);
         if (!state.image.type.startsWith('image/')) return (e.textContent = 'That file isn’t an image.', false);
+        if (state.image.size > 12 * 1024 * 1024) return (e.textContent = 'That image is over 12 MB — please use a smaller one.', false);
       }
       if (step === 2) {
         const v = $('#email').value.trim();

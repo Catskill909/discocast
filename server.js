@@ -185,10 +185,34 @@ function listSubmissions() {
 const IMAGE_TYPES = {
   'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif',
 };
+// Preset .json can be large — exports may embed video, so allow plenty of room.
+// The preview image stays small. multer only supports one global fileSize, so
+// the hard ceiling is the preset cap and the image cap is enforced in-handler.
+const MAX_PRESET_MB = 80;
+const MAX_IMAGE_MB = 12;
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 6 * 1024 * 1024, files: 2 }, // 6MB hard ceiling per file
+  limits: { fileSize: MAX_PRESET_MB * 1024 * 1024, files: 2 },
 });
+
+// Run the multer upload middleware but translate its errors (chiefly an
+// oversized file) into a clean JSON 4xx. Without this, multer calls next(err)
+// and Express's default handler returns a bare HTML 500 with a stack trace —
+// which is what made the submit form appear "broken" for any large file.
+const uploadFields = upload.fields([{ name: 'preset', maxCount: 1 }, { name: 'image', maxCount: 1 }]);
+function handleUpload(req, res, next) {
+  uploadFields(req, res, (err) => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError) {
+      const msg = err.code === 'LIMIT_FILE_SIZE'
+        ? `The preset file must be under ${MAX_PRESET_MB} MB.`
+        : 'Upload failed — please check your files and try again.';
+      return res.status(413).json({ error: msg });
+    }
+    console.error('[submit] upload error:', err.message);
+    return res.status(400).json({ error: 'Upload failed — please try again.' });
+  });
+}
 
 // crude in-memory per-IP rate limit for public submissions
 const submitHits = new Map(); // ip -> [timestamps]
@@ -255,7 +279,7 @@ app.delete('/api/submissions/:id', requireAdmin, (req, res) => {
 // Defences (no captcha, no third party): multi-step client flow, honeypot field,
 // bot-UA block, per-IP rate limit, size caps, strict validation, and the fact
 // that NOTHING is public until an admin approves it.
-app.post('/api/submit', upload.fields([{ name: 'preset', maxCount: 1 }, { name: 'image', maxCount: 1 }]), (req, res) => {
+app.post('/api/submit', handleUpload, (req, res) => {
   if (isBot(req)) return res.status(403).json({ error: 'forbidden' });
 
   // Honeypot: real users never fill this hidden field. Pretend success, store nothing.
@@ -275,6 +299,9 @@ app.post('/api/submit', upload.fields([{ name: 'preset', maxCount: 1 }, { name: 
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'A valid email is required.' });
   if (!presetFile) return res.status(400).json({ error: 'A preset .json file is required.' });
   if (!imageFile) return res.status(400).json({ error: 'A preview image is required.' });
+  if (imageFile.size > MAX_IMAGE_MB * 1024 * 1024) {
+    return res.status(413).json({ error: `The preview image must be under ${MAX_IMAGE_MB} MB.` });
+  }
 
   // Preset must be valid JSON (a real DiscoCast export parses cleanly).
   let presetText;
@@ -315,6 +342,14 @@ app.get('/healthz', (_req, res) => res.type('text/plain').send('ok'));
 
 // --- static promo page ------------------------------------------------------
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
+
+// Safety net: any unhandled error returns a terse message, never a stack trace.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[error]', req.method, req.path, '-', err.message);
+  if (res.headersSent) return;
+  res.status(err.status || 500).json({ error: 'Something went wrong.' });
+});
 
 app.listen(PORT, () => {
   console.log(`[discocast] promo server on :${PORT}`);
