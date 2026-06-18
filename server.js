@@ -226,9 +226,12 @@ app.get('/api/submissions/:id/image', requireAdmin, (req, res) => {
 });
 
 app.get('/api/submissions/:id/preset', requireAdmin, (req, res) => {
+  const m = readMeta(req.params.id);
   const f = path.join(SUB_DIR, req.params.id, 'preset.json');
-  if (!fs.existsSync(f)) return res.status(404).end();
-  res.download(f, `${req.params.id}.json`);
+  if (!m || !fs.existsSync(f)) return res.status(404).end();
+  // Download as the preset's name, sanitized for the filesystem.
+  const safe = (m.name || '').replace(/[^a-z0-9_\- ]+/gi, '').trim().replace(/\s+/g, '-').slice(0, 60);
+  res.download(f, `${safe || req.params.id}.json`);
 });
 
 function setStatus(req, res, status) {
