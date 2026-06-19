@@ -119,6 +119,27 @@
       .geo-city { grid-template-columns: 1fr 60px 60px; }
     }
 
+    /* ── Preset downloads ── */
+    .dl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+               margin-bottom: 16px; flex-wrap: wrap; }
+    .dl-head h3 { font-size: 16px; margin: 0; }
+    .dl-head .total { color: var(--muted); font-size: 13.5px; }
+    .dl-head .total b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .dl-table { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .dl-row { display: grid; grid-template-columns: 30px 1fr 90px 1.1fr; gap: 14px; align-items: center;
+              padding: 13px 18px; border-top: 1px solid var(--line); font-size: 14px; }
+    .dl-row:first-child { border-top: 0; }
+    .dl-row.head { color: var(--muted); font-size: 12px; text-transform: uppercase;
+                   letter-spacing: .04em; font-weight: 600; background: var(--panel-2); }
+    .dl-row .rank { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+    .dl-row .pname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dl-row .num { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+    .dl-bar { height: 7px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+    .dl-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+    @media (max-width: 680px) {
+      .dl-row { grid-template-columns: 24px 1fr 70px; } .dl-row .dl-bar { display: none; }
+    }
+
     .filters { display: flex; gap: 7px; margin-bottom: 16px; flex-wrap: wrap; }
     .chip { border: 1px solid var(--line); background: var(--panel); color: var(--muted);
             border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; }
@@ -205,6 +226,7 @@
 
     <div class="tabs">
       <button class="tab active" data-tab="stats">Stats</button>
+      <button class="tab" data-tab="presets">Preset downloads</button>
       <button class="tab" data-tab="subs">Submissions <span class="badge hidden" id="pending-badge">0</span></button>
     </div>
 
@@ -226,6 +248,15 @@
         <h3 class="geo-title">Locations</h3>
         <div id="geo-list"></div>
       </div>
+    </section>
+
+    <!-- Preset downloads -->
+    <section id="panel-presets" class="hidden">
+      <div class="dl-head">
+        <h3>Preset downloads</h3>
+        <span class="total">Total: <b id="dl-total">0</b></span>
+      </div>
+      <div id="dl-list"></div>
     </section>
 
     <!-- Submissions -->
@@ -269,6 +300,7 @@
 
     let KEY = loadStoredKey();
     let SUBS = [];
+    let STATS = null;
     let filter = 'pending';
 
     function api(path, opts = {}) {
@@ -321,6 +353,7 @@
       t.classList.add('active');
       const tab = t.dataset.tab;
       $('#panel-stats').classList.toggle('hidden', tab !== 'stats');
+      $('#panel-presets').classList.toggle('hidden', tab !== 'presets');
       $('#panel-subs').classList.toggle('hidden', tab !== 'subs');
     }));
 
@@ -329,6 +362,7 @@
       const r = await api('/api/stats');
       if (!r.ok) return;
       const c = await r.json();
+      STATS = c;
       $('#s-views').textContent = c.pageViews ?? 0;
       $('#s-mac').textContent = c.downloads.mac ?? 0;
       $('#s-win').textContent = c.downloads.windows ?? 0;
@@ -338,6 +372,32 @@
       const upd = c.updated ? new Date(c.updated).toLocaleString() : '—';
       $('#s-meta').textContent = `Counting since ${since} · last update ${upd}`;
       renderGeo(c.geo && c.geo.countries);
+      renderPresetDownloads();
+    }
+
+    // ── Preset downloads ──
+    // A clean leaderboard of approved presets by download count, built from the
+    // submissions list (names + per-preset counts) with the global total on top.
+    function renderPresetDownloads() {
+      const total = (STATS && STATS.presetDownloads && STATS.presetDownloads.total) || 0;
+      $('#dl-total').textContent = total.toLocaleString();
+      const el = $('#dl-list');
+      const rows = SUBS
+        .filter((s) => s.status === 'approved')
+        .map((s) => ({ name: s.name, downloads: s.downloads || 0 }))
+        .sort((a, b) => b.downloads - a.downloads);
+      if (!rows.length) { el.innerHTML = `<div class="empty">No approved presets yet.</div>`; return; }
+      const max = Math.max(1, rows[0].downloads);
+      el.innerHTML = `<div class="dl-table">
+        <div class="dl-row head"><span class="rank"></span><span>Preset</span><span class="num">Downloads</span><span class="dl-bar"></span></div>
+        ${rows.map((r, i) => `
+          <div class="dl-row">
+            <span class="rank">${i + 1}</span>
+            <span class="pname">${esc(r.name)}</span>
+            <span class="num">${r.downloads.toLocaleString()}</span>
+            <span class="dl-bar"><i style="width:${Math.round((r.downloads / max) * 100)}%"></i></span>
+          </div>`).join('')}
+      </div>`;
     }
 
     // ── Locations ──
@@ -415,6 +475,7 @@
       badge.textContent = pending;
       badge.classList.toggle('hidden', pending === 0);
       renderSubs();
+      renderPresetDownloads();
     }
 
     function renderSubs() {
