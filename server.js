@@ -366,6 +366,43 @@ app.post('/api/submit', handleUpload, (req, res) => {
   res.json({ ok: true, id });
 });
 
+// --- public approved-presets API --------------------------------------------
+// The front-facing /presets gallery. Only ever exposes submissions an admin has
+// approved, and NEVER the submitter's email (or any other private meta field).
+function publicPreset(m) {
+  return {
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    createdAt: m.createdAt,
+    presetBytes: m.presetBytes,
+  };
+}
+// Look up a submission and only return it if it's publicly approved.
+function approved(id) {
+  const m = readMeta(id);
+  return m && m.status === 'approved' ? m : null;
+}
+
+app.get('/api/presets', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(listSubmissions().filter((m) => m.status === 'approved').map(publicPreset));
+});
+
+app.get('/api/presets/:id/image', (req, res) => {
+  const m = approved(req.params.id);
+  if (!m || !m.image) return res.status(404).end();
+  res.sendFile(path.join(SUB_DIR, req.params.id, m.image));
+});
+
+app.get('/api/presets/:id/preset', (req, res) => {
+  const m = approved(req.params.id);
+  const f = path.join(SUB_DIR, req.params.id, 'preset.json');
+  if (!m || !fs.existsSync(f)) return res.status(404).end();
+  const safe = (m.name || '').replace(/[^a-z0-9_\- ]+/gi, '').trim().replace(/\s+/g, '-').slice(0, 60);
+  res.download(f, `${safe || req.params.id}.json`);
+});
+
 // --- legacy /stats (kept; same key, ?key=) ----------------------------------
 app.get('/stats.json', (req, res) => {
   if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized — add ?key=' });
