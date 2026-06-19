@@ -186,7 +186,7 @@
   <div class="wrap hidden" id="app">
     <header class="top">
       <div class="brand"><img src="/logo.png" alt="">DiscoCast Admin</div>
-      <button class="btn ghost sm" id="logout">Lock</button>
+      <button class="btn ghost sm" id="logout">Log out</button>
     </header>
 
     <div class="tabs">
@@ -233,7 +233,26 @@
   <script>
     const $ = (s) => document.querySelector(s);
     const KEY_STORE = 'discocast-admin-key';
-    let KEY = sessionStorage.getItem(KEY_STORE) || '';
+    const EXP_STORE = 'discocast-admin-exp';
+    const SESSION_MS = 60 * 24 * 60 * 60 * 1000; // stay logged in for 60 days
+
+    // Read a persisted key only if it hasn't passed its 60-day expiry.
+    function loadStoredKey() {
+      const key = localStorage.getItem(KEY_STORE);
+      const exp = Number(localStorage.getItem(EXP_STORE) || 0);
+      if (!key || !exp || Date.now() > exp) { clearStoredKey(); return ''; }
+      return key;
+    }
+    function saveStoredKey(key) {
+      localStorage.setItem(KEY_STORE, key);
+      localStorage.setItem(EXP_STORE, String(Date.now() + SESSION_MS));
+    }
+    function clearStoredKey() {
+      localStorage.removeItem(KEY_STORE);
+      localStorage.removeItem(EXP_STORE);
+    }
+
+    let KEY = loadStoredKey();
     let SUBS = [];
     let filter = 'pending';
 
@@ -251,14 +270,14 @@
       const key = $('#key').value.trim();
       $('#gate-err').textContent = '';
       if (await tryUnlock(key)) {
-        KEY = key; sessionStorage.setItem(KEY_STORE, key);
+        KEY = key; saveStoredKey(key);
         enterApp();
       } else {
         $('#gate-err').textContent = 'Wrong key. Try again.';
       }
     });
     $('#logout').addEventListener('click', () => {
-      sessionStorage.removeItem(KEY_STORE); location.reload();
+      clearStoredKey(); location.reload();
     });
 
     // Show / hide the admin key
