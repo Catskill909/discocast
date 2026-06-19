@@ -237,7 +237,6 @@
         <div class="stat"><div class="k">Downloads · macOS</div><div class="v" id="s-mac">—</div></div>
         <div class="stat"><div class="k">Downloads · Windows</div><div class="v" id="s-win">—</div></div>
         <div class="stat"><div class="k">Downloads · total</div><div class="v" id="s-total">—</div></div>
-        <div class="stat"><div class="k">Preset downloads</div><div class="v" id="s-presets">—</div></div>
       </div>
       <div class="meta">
         <span id="s-meta">—</span>
@@ -367,7 +366,6 @@
       $('#s-mac').textContent = c.downloads.mac ?? 0;
       $('#s-win').textContent = c.downloads.windows ?? 0;
       $('#s-total').textContent = c.total ?? 0;
-      $('#s-presets').textContent = (c.presetDownloads && c.presetDownloads.total) ?? 0;
       const since = c.firstSeen ? new Date(c.firstSeen).toLocaleString() : '—';
       const upd = c.updated ? new Date(c.updated).toLocaleString() : '—';
       $('#s-meta').textContent = `Counting since ${since} · last update ${upd}`;
