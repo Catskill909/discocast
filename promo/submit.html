@@ -23,11 +23,19 @@
     }
     h1, h2, .brand { font-family: 'Space Grotesk', 'Inter', sans-serif; }
     .card {
+      position: relative;
       width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--line);
       border-radius: 20px; padding: 30px 28px; box-shadow: 0 30px 80px rgba(0,0,0,.5);
     }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; margin-bottom: 22px; }
     .brand img { width: 26px; height: 26px; }
+    .cancel {
+      position: absolute; top: 22px; right: 22px; width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid var(--line); background: var(--panel-2); color: var(--muted);
+      font-size: 17px; line-height: 1; display: grid; place-items: center; text-decoration: none;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .cancel:hover { color: var(--text); background: #21212c; border-color: var(--accent); }
 
     /* progress */
     .steps { display: flex; gap: 6px; margin-bottom: 24px; }
@@ -79,6 +87,7 @@
 </head>
 <body>
   <div class="card">
+    <a class="cancel" id="cancel" href="/presets" aria-label="Cancel" title="Cancel">✕</a>
     <div class="brand"><img src="/logo.png" alt="">DiscoCast</div>
     <div class="steps" id="bars"></div>
 
@@ -254,6 +263,23 @@
     }
 
     function esc(s) { return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+    // ── Cancel: go back where they came from (same-origin) or to /presets,
+    //    confirming first if they've already started filling things in.
+    (() => {
+      const cancel = $('#cancel');
+      try {
+        const ref = new URL(document.referrer);
+        if (ref.origin === location.origin && ref.pathname !== location.pathname) cancel.href = ref.pathname;
+      } catch { /* no/cross-origin referrer — keep /presets */ }
+      cancel.addEventListener('click', (e) => {
+        if (step === TOTAL - 1) return; // already submitted — let it through
+        const dirty = state.preset || state.image || $('#name').value.trim() ||
+                      $('#description').value.trim() || $('#email').value.trim();
+        if (dirty && !confirm('Discard this submission and leave?')) e.preventDefault();
+      });
+    })();
+
     show(0);
   </script>
 </body>
