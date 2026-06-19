@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "express": "^4.21.2",
+    "geoip-lite": "^2.0.3",
     "multer": "^2.0.1"
   }
 }

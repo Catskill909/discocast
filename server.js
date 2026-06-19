@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const geoip = require('geoip-lite'); // offline MaxMind lookups — no network, no API key
 
 const app = express();
 app.disable('x-powered-by');
@@ -36,6 +37,11 @@ const WIN_FILE = '/DiscoCast Visualizer_0.1.0_x64-setup.exe';
 let counts = {
   pageViews: 0,
   downloads: { mac: 0, windows: 0 },
+  // Aggregate-only geo breakdown. We store NO raw IPs — just per-country tallies
+  // of the same view/download events we already count, derived in-process from
+  // geoip-lite. Keyed by ISO country code (or 'ZZ' when the IP can't be resolved,
+  // e.g. localhost / private ranges). Each value is { views, downloads }.
+  geo: { countries: {} },
   firstSeen: null,
   updated: null,
 };
@@ -49,6 +55,7 @@ function loadCounts() {
         ...counts,
         ...raw,
         downloads: { ...counts.downloads, ...(raw.downloads || {}) },
+        geo: { countries: { ...(raw.geo && raw.geo.countries) } },
       };
     }
   } catch (e) {
@@ -118,6 +125,24 @@ function isFreshGet(req) {
   return !r || r.startsWith('bytes=0-');
 }
 
+// Resolve the visitor's country from req.ip (real client IP thanks to
+// `trust proxy`) and bump the matching per-country tally. 'view' or 'download'.
+// Never throws and never stores the IP itself — only the country aggregate.
+function recordGeo(type) {
+  return (req) => {
+    let cc = 'ZZ'; // unresolved (localhost, private ranges, or unknown IP)
+    try {
+      const hit = geoip.lookup(req.ip);
+      if (hit && hit.country) cc = hit.country;
+    } catch { /* keep ZZ */ }
+    const row = counts.geo.countries[cc] || { views: 0, downloads: 0 };
+    if (type === 'download') row.downloads++; else row.views++;
+    counts.geo.countries[cc] = row;
+  };
+}
+const geoView = recordGeo('view');
+const geoDownload = recordGeo('download');
+
 // --- counting middleware (runs BEFORE static, then passes through) ----------
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
@@ -127,11 +152,11 @@ app.use((req, res, next) => {
   try { p = decodeURIComponent(req.path); } catch { /* keep raw */ }
 
   if (p === MAC_FILE && isFreshGet(req)) {
-    counts.downloads.mac++; saveCounts();
+    counts.downloads.mac++; geoDownload(req); saveCounts();
   } else if (p === WIN_FILE && isFreshGet(req)) {
-    counts.downloads.windows++; saveCounts();
+    counts.downloads.windows++; geoDownload(req); saveCounts();
   } else if ((p === '/' || p === '/index.html') && acceptsHtml(req)) {
-    counts.pageViews++; saveCounts();
+    counts.pageViews++; geoView(req); saveCounts();
   }
   next();
 });
@@ -233,6 +258,7 @@ app.get('/api/stats', requireAdmin, (req, res) => {
 
 app.post('/api/stats/reset', requireAdmin, (req, res) => {
   counts = { pageViews: 0, downloads: { mac: 0, windows: 0 },
+             geo: { countries: {} },
              firstSeen: new Date().toISOString(), updated: null };
   saveCounts();
   res.json({ ok: true });
