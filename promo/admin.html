@@ -103,7 +103,21 @@
     .geo-row .num { font-variant-numeric: tabular-nums; text-align: right; }
     .geo-bar { height: 7px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
     .geo-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
-    @media (max-width: 680px) { .geo-row { grid-template-columns: 1fr 60px 60px; } .geo-row .geo-bar { display: none; } }
+    .geo-row.country-row { cursor: pointer; }
+    .geo-row.country-row:hover { background: var(--panel-2); }
+    .caret { display: inline-block; width: 11px; font-size: 10px; color: var(--muted);
+             transition: transform .15s; }
+    .geo-row.country-row.open .caret { transform: rotate(90deg); }
+    .geo-cities { background: #101019; }
+    .geo-city { display: grid; grid-template-columns: 1fr 90px 90px 1fr; gap: 14px; align-items: center;
+                padding: 9px 18px 9px 42px; font-size: 13.5px; color: var(--muted);
+                border-top: 1px solid var(--line); }
+    .geo-city .city-name { color: var(--text); }
+    .geo-city .num { font-variant-numeric: tabular-nums; text-align: right; }
+    @media (max-width: 680px) {
+      .geo-row { grid-template-columns: 1fr 60px 60px; } .geo-row .geo-bar { display: none; }
+      .geo-city { grid-template-columns: 1fr 60px 60px; }
+    }
 
     .filters { display: flex; gap: 7px; margin-bottom: 16px; flex-wrap: wrap; }
     .chip { border: 1px solid var(--line); background: var(--panel); color: var(--muted);
@@ -336,24 +350,47 @@
       if (cc === 'ZZ' || !/^[A-Z]{2}$/.test(cc)) return '🌐';
       return String.fromCodePoint(...[...cc].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
     }
-    function renderGeo(countries) {
-      const el = $('#geo-list');
-      const rows = Object.entries(countries || {})
-        .map(([cc, v]) => ({ cc, views: v.views || 0, downloads: v.downloads || 0, total: (v.views || 0) + (v.downloads || 0) }))
+    // Turn a { key: {views,downloads} } map into a sorted, non-empty array.
+    function geoRows(obj) {
+      return Object.entries(obj || {})
+        .map(([k, v]) => ({ k, views: v.views || 0, downloads: v.downloads || 0,
+                            total: (v.views || 0) + (v.downloads || 0), cities: v.cities }))
         .filter((r) => r.total > 0)
         .sort((a, b) => b.total - a.total);
+    }
+    function renderGeo(countries) {
+      const el = $('#geo-list');
+      const rows = geoRows(countries);
       if (!rows.length) { el.innerHTML = `<div class="empty">No location data yet.</div>`; return; }
       const max = rows[0].total;
       el.innerHTML = `<div class="geo-table">
         <div class="geo-row head"><span>Country</span><span class="num">Views</span><span class="num">Downloads</span><span></span></div>
-        ${rows.map((r) => `
-          <div class="geo-row">
-            <span class="country"><span class="flag">${flag(r.cc)}</span>${esc(countryName(r.cc))}</span>
+        ${rows.map((r) => {
+          const cities = geoRows(r.cities);
+          return `
+          <div class="geo-row country-row" data-cc="${esc(r.k)}">
+            <span class="country"><span class="caret">${cities.length ? '▸' : '&nbsp;'}</span><span class="flag">${flag(r.k)}</span>${esc(countryName(r.k))}</span>
             <span class="num">${r.views}</span>
             <span class="num">${r.downloads}</span>
             <span class="geo-bar"><i style="width:${Math.round((r.total / max) * 100)}%"></i></span>
-          </div>`).join('')}
+          </div>
+          <div class="geo-cities hidden" data-for="${esc(r.k)}">
+            ${cities.map((c) => `
+              <div class="geo-city">
+                <span class="city-name">${esc(c.k)}</span>
+                <span class="num">${c.views}</span>
+                <span class="num">${c.downloads}</span>
+                <span></span>
+              </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>`;
+      el.querySelectorAll('.country-row').forEach((row) => row.addEventListener('click', () => {
+        const block = el.querySelector(`.geo-cities[data-for="${CSS.escape(row.dataset.cc)}"]`);
+        if (!block || !block.children.length) return; // nothing to expand
+        block.classList.toggle('hidden');
+        row.classList.toggle('open');
+      }));
     }
     $('#reset').addEventListener('click', async () => {
       if (!confirm('Reset all stats to zero? This cannot be undone.')) return;

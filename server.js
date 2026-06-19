@@ -125,18 +125,29 @@ function isFreshGet(req) {
   return !r || r.startsWith('bytes=0-');
 }
 
-// Resolve the visitor's country from req.ip (real client IP thanks to
-// `trust proxy`) and bump the matching per-country tally. 'view' or 'download'.
-// Never throws and never stores the IP itself — only the country aggregate.
+// Resolve the visitor's country (and best-effort city) from req.ip — the real
+// client IP thanks to `trust proxy` — and bump the matching tally. 'view' or
+// 'download'. Never throws and never stores the IP itself: only aggregate
+// per-country counts, each with a nested per-city breakdown.
 function recordGeo(type) {
   return (req) => {
-    let cc = 'ZZ'; // unresolved (localhost, private ranges, or unknown IP)
+    let cc = 'ZZ';   // country: unresolved (localhost, private ranges, unknown IP)
+    let city = '';   // best-effort "City, Region"; often blank on free GeoLite data
     try {
       const hit = geoip.lookup(req.ip);
-      if (hit && hit.country) cc = hit.country;
-    } catch { /* keep ZZ */ }
-    const row = counts.geo.countries[cc] || { views: 0, downloads: 0 };
-    if (type === 'download') row.downloads++; else row.views++;
+      if (hit) {
+        if (hit.country) cc = hit.country;
+        city = [hit.city, hit.region].filter(Boolean).join(', ');
+      }
+    } catch { /* keep defaults */ }
+
+    const row = counts.geo.countries[cc] || { views: 0, downloads: 0, cities: {} };
+    if (!row.cities) row.cities = {}; // backfill for pre-city records
+    const cityKey = city || 'Unknown city';
+    const crow = row.cities[cityKey] || { views: 0, downloads: 0 };
+    if (type === 'download') { row.downloads++; crow.downloads++; }
+    else { row.views++; crow.views++; }
+    row.cities[cityKey] = crow;
     counts.geo.countries[cc] = row;
   };
 }
