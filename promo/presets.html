@@ -177,6 +177,7 @@
       return mb >= 1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
     }
     function fmtDate(d) { try { return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; } }
+    function fmtDownloads(n) { n = n || 0; return n.toLocaleString() + ' download' + (n === 1 ? '' : 's'); }
 
     const dlIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
@@ -209,7 +210,7 @@
             <h3>${esc(p.name)}</h3>
             <div class="desc">${esc(p.description)}</div>
             <div class="foot">
-              <span class="size">${fmtSize(p.presetBytes)}</span>
+              <span class="size">${fmtSize(p.presetBytes)} · ${fmtDownloads(p.downloads)}</span>
               <a class="btn" href="/api/presets/${esc(p.id)}/preset" download>${dlIcon} Download</a>
             </div>
           </div>
@@ -225,7 +226,7 @@
         <button class="x" data-close title="Close">✕</button>
         <img src="/api/presets/${esc(id)}/image" alt="${esc(p.name)}">
         <h2>${esc(p.name)}</h2>
-        <div class="m-info">Shared ${fmtDate(p.createdAt)} · ${fmtSize(p.presetBytes)}</div>
+        <div class="m-info">Shared ${fmtDate(p.createdAt)} · ${fmtSize(p.presetBytes)} · ${fmtDownloads(p.downloads)}</div>
         <div class="m-desc">${esc(p.description)}</div>
         <div class="m-actions">
           <a class="btn" href="/api/presets/${esc(id)}/preset" download>${dlIcon} Download preset</a>

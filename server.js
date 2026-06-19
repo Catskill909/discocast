@@ -42,6 +42,10 @@ let counts = {
   // geoip-lite. Keyed by ISO country code (or 'ZZ' when the IP can't be resolved,
   // e.g. localhost / private ranges). Each value is { views, downloads }.
   geo: { countries: {} },
+  // Community-preset download tracking. `total` is every approved-preset .json
+  // fetch; `byId` keys each preset's id to its own count so the admin console
+  // can show which presets are popular. Same human-only filtering as installers.
+  presetDownloads: { total: 0, byId: {} },
   firstSeen: null,
   updated: null,
 };
@@ -56,6 +60,10 @@ function loadCounts() {
         ...raw,
         downloads: { ...counts.downloads, ...(raw.downloads || {}) },
         geo: { countries: { ...(raw.geo && raw.geo.countries) } },
+        presetDownloads: {
+          total: (raw.presetDownloads && raw.presetDownloads.total) || 0,
+          byId: { ...(raw.presetDownloads && raw.presetDownloads.byId) },
+        },
       };
     }
   } catch (e) {
@@ -153,6 +161,16 @@ function recordGeo(type) {
 }
 const geoView = recordGeo('view');
 const geoDownload = recordGeo('download');
+
+// Count one community-preset download: bump the global total and the per-preset
+// tally, then also fold it into the geo "downloads" breakdown so preset fetches
+// show up on the locations map alongside installer downloads.
+function recordPresetDownload(id, req) {
+  counts.presetDownloads.total++;
+  counts.presetDownloads.byId[id] = (counts.presetDownloads.byId[id] || 0) + 1;
+  geoDownload(req);
+  saveCounts();
+}
 
 // --- counting middleware (runs BEFORE static, then passes through) ----------
 app.use((req, res, next) => {
@@ -270,6 +288,7 @@ app.get('/api/stats', requireAdmin, (req, res) => {
 app.post('/api/stats/reset', requireAdmin, (req, res) => {
   counts = { pageViews: 0, downloads: { mac: 0, windows: 0 },
              geo: { countries: {} },
+             presetDownloads: { total: 0, byId: {} },
              firstSeen: new Date().toISOString(), updated: null };
   saveCounts();
   res.json({ ok: true });
@@ -277,7 +296,10 @@ app.post('/api/stats/reset', requireAdmin, (req, res) => {
 
 app.get('/api/submissions', requireAdmin, (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.json(listSubmissions());
+  // Fold in each preset's live download count so the console can show it.
+  res.json(listSubmissions().map((m) => ({
+    ...m, downloads: counts.presetDownloads.byId[m.id] || 0,
+  })));
 });
 
 app.get('/api/submissions/:id/image', requireAdmin, (req, res) => {
@@ -376,6 +398,7 @@ function publicPreset(m) {
     description: m.description,
     createdAt: m.createdAt,
     presetBytes: m.presetBytes,
+    downloads: counts.presetDownloads.byId[m.id] || 0,
   };
 }
 // Look up a submission and only return it if it's publicly approved.
@@ -399,6 +422,9 @@ app.get('/api/presets/:id/preset', (req, res) => {
   const m = approved(req.params.id);
   const f = path.join(SUB_DIR, req.params.id, 'preset.json');
   if (!m || !fs.existsSync(f)) return res.status(404).end();
+  // Count the actual file fetch, same human-only rules as the installers: skip
+  // bots/tools and only the opening request of a range/resumed fetch.
+  if (!isBot(req) && isFreshGet(req)) recordPresetDownload(m.id, req);
   const safe = (m.name || '').replace(/[^a-z0-9_\- ]+/gi, '').trim().replace(/\s+/g, '-').slice(0, 60);
   res.download(f, `${safe || req.params.id}.json`);
 });
