@@ -6,7 +6,8 @@ WORKDIR /app
 # curl for Coolify/Docker healthchecks
 RUN apk add --no-cache curl
 
-# Install prod deps only (just express)
+# Install prod deps only. sharp pulls its prebuilt musl libvips binary for the
+# build arch here, so it must run inside the alpine image (not be copied in).
 COPY package*.json ./
 RUN npm install --omit=dev
 

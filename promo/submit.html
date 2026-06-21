@@ -186,6 +186,34 @@
     }
 
     // ── file pickers ──
+    // Pre-shrink big photos/screenshots in the browser so uploads stay small —
+    // mirrors the server's 1600px cap. GIF/WEBP are left untouched: they may be
+    // animated, and a canvas pass would flatten them to a single frame (the
+    // server preserves their animation). Any failure falls back to the original.
+    const CLIENT_MAX_PX = 1600;
+    function downscaleImage(file) {
+      return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/webp') return resolve(file);
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, CLIENT_MAX_PX / Math.max(img.width, img.height));
+          if (scale === 1) { URL.revokeObjectURL(url); return resolve(file); } // already small enough
+          const cw = Math.round(img.width * scale), ch = Math.round(img.height * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = cw; canvas.height = ch;
+          canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+          URL.revokeObjectURL(url);
+          canvas.toBlob((blob) => {
+            if (!blob) return resolve(file); // toBlob unsupported/failed — send original
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' }));
+          }, 'image/webp', 0.85);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')); };
+        img.src = url;
+      });
+    }
+
     function wireDrop(dropId, inputId, onFile) {
       const drop = $('#' + dropId), input = $('#' + inputId);
       drop.addEventListener('click', () => input.click());
@@ -199,10 +227,13 @@
       state.preset = f; $('#preset-drop').classList.add('has');
       $('#preset-text').innerHTML = `<strong>${f.name}</strong><br>ready`;
     });
-    wireDrop('image-drop', 'image-input', (f) => {
-      state.image = f; $('#image-drop').classList.add('has');
+    wireDrop('image-drop', 'image-input', async (f) => {
+      $('#image-drop').classList.add('has');
+      $('#image-text').innerHTML = `<strong>${f.name}</strong><br>processing…`;
+      const out = await downscaleImage(f).catch(() => f); // fall back to the original on any failure
+      state.image = out;
       $('#image-text').innerHTML = `<strong>${f.name}</strong><br>looks good`;
-      const url = URL.createObjectURL(f); const img = $('#image-preview'); img.src = url; img.style.display = 'block';
+      const url = URL.createObjectURL(out); const img = $('#image-preview'); img.src = url; img.style.display = 'block';
     });
 
     // ── validation per step ──

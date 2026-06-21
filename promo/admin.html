@@ -482,7 +482,7 @@
       if (!list.length) { el.innerHTML = `<div class="empty">No ${filter === 'all' ? '' : filter} submissions.</div>`; return; }
       el.innerHTML = list.map((s) => `
         <div class="sub" data-id="${s.id}">
-          <img src="/api/submissions/${s.id}/image?key=${encodeURIComponent(KEY)}" alt="" loading="lazy" data-open title="View larger">
+          <img src="/api/submissions/${s.id}/thumb?key=${encodeURIComponent(KEY)}" alt="" loading="lazy" data-open title="View larger">
           <div>
             <div class="name" data-open>${esc(s.name)} <span class="tag ${s.status}">${s.status}</span></div>
             <div class="desc">${esc(s.description)}</div>

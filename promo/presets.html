@@ -204,7 +204,7 @@
       grid.innerHTML = PRESETS.map((p) => `
         <div class="card" data-id="${esc(p.id)}">
           <div class="thumb" data-open>
-            <img src="/api/presets/${esc(p.id)}/image" alt="${esc(p.name)}" loading="lazy">
+            <img src="/api/presets/${esc(p.id)}/thumb" alt="${esc(p.name)}" loading="lazy">
           </div>
           <div class="body">
             <h3>${esc(p.name)}</h3>

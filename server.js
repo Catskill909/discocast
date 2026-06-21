@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const sharp = require('sharp'); // libvips-backed resize/transcode for preview images
 const geoip = require('geoip-lite'); // offline MaxMind lookups — no network, no API key
 
 const app = express();
@@ -207,9 +208,10 @@ function requireAdmin(req, res, next) {
 
 // --- submission storage -----------------------------------------------------
 // Each preset submission lives at DATA_DIR/submissions/<id>/ on the volume:
-//   meta.json  — { id, name, description, email, status, createdAt, image, presetBytes }
+//   meta.json  — { id, name, description, email, status, createdAt, image, thumb, presetBytes }
 //   preset.json — the uploaded DiscoCast export
-//   image.<ext> — the thumbnail
+//   image.webp — full preview, downscaled from the upload (animation preserved)
+//   thumb.webp — small static crop for the gallery/admin cards
 const SUB_DIR = path.join(DATA_DIR, 'submissions');
 fs.mkdirSync(SUB_DIR, { recursive: true });
 
@@ -244,6 +246,31 @@ const IMAGE_TYPES = {
 // the hard ceiling is the preset cap and the image cap is enforced in-handler.
 const MAX_PRESET_MB = 80;
 const MAX_IMAGE_MB = 12;
+// Output dimensions: full preview is capped so a 12 MB upload never lands on the
+// volume (or the wire) at full size; the card thumb is much smaller still.
+const FULL_MAX_PX = 1600;
+const THUMB_MAX_PX = 400;
+
+// Turn an uploaded image buffer into a downscaled full preview + a small card
+// thumbnail, both re-encoded as WEBP. Animated GIF/WEBP uploads keep their
+// animation in the full preview; the thumb is always a single static frame to
+// keep the gallery light. Returns { full, thumb } buffers.
+async function processImage(buf) {
+  const meta = await sharp(buf).metadata();
+  const animated = (meta.pages || 1) > 1;
+  const full = await sharp(buf, { animated })
+    .rotate() // honour EXIF orientation before we strip it on re-encode
+    .resize({ width: FULL_MAX_PX, height: FULL_MAX_PX, fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer();
+  const thumb = await sharp(buf)
+    .rotate()
+    .resize({ width: THUMB_MAX_PX, height: THUMB_MAX_PX, fit: 'cover', position: 'centre' })
+    .webp({ quality: 80 })
+    .toBuffer();
+  return { full, thumb };
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_PRESET_MB * 1024 * 1024, files: 2 },
@@ -308,6 +335,13 @@ app.get('/api/submissions/:id/image', requireAdmin, (req, res) => {
   res.sendFile(path.join(SUB_DIR, req.params.id, m.image));
 });
 
+app.get('/api/submissions/:id/thumb', requireAdmin, (req, res) => {
+  const m = readMeta(req.params.id);
+  const file = m && (m.thumb || m.image); // fall back to the full image if no thumb
+  if (!file) return res.status(404).end();
+  res.sendFile(path.join(SUB_DIR, req.params.id, file));
+});
+
 app.get('/api/submissions/:id/preset', requireAdmin, (req, res) => {
   const m = readMeta(req.params.id);
   const f = path.join(SUB_DIR, req.params.id, 'preset.json');
@@ -338,7 +372,7 @@ app.delete('/api/submissions/:id', requireAdmin, (req, res) => {
 // Defences (no captcha, no third party): multi-step client flow, honeypot field,
 // bot-UA block, per-IP rate limit, size caps, strict validation, and the fact
 // that NOTHING is public until an admin approves it.
-app.post('/api/submit', handleUpload, (req, res) => {
+app.post('/api/submit', handleUpload, async (req, res) => {
   if (isBot(req)) return res.status(403).json({ error: 'forbidden' });
 
   // Honeypot: real users never fill this hidden field. Pretend success, store nothing.
@@ -370,19 +404,32 @@ app.post('/api/submit', handleUpload, (req, res) => {
   } catch {
     return res.status(400).json({ error: 'The preset file is not valid JSON.' });
   }
-  const ext = IMAGE_TYPES[imageFile.mimetype];
-  if (!ext) return res.status(400).json({ error: 'Image must be PNG, JPG, WEBP, or GIF.' });
+  if (!IMAGE_TYPES[imageFile.mimetype]) {
+    return res.status(400).json({ error: 'Image must be PNG, JPG, WEBP, or GIF.' });
+  }
+
+  // Downscale + transcode before anything touches the volume. A corrupt or
+  // unsupported buffer that slips past the mimetype check fails here cleanly.
+  let images;
+  try {
+    images = await processImage(imageFile.buffer);
+  } catch (err) {
+    console.error('[submit] image processing failed:', err.message);
+    return res.status(400).json({ error: 'The preview image could not be processed.' });
+  }
 
   const id = newId();
   const dir = path.join(SUB_DIR, id);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'preset.json'), presetText);
-  fs.writeFileSync(path.join(dir, `image.${ext}`), imageFile.buffer);
+  fs.writeFileSync(path.join(dir, 'image.webp'), images.full);
+  fs.writeFileSync(path.join(dir, 'thumb.webp'), images.thumb);
   writeMeta(id, {
     id, name, description, email,
     status: 'pending',
     createdAt: new Date().toISOString(),
-    image: `image.${ext}`,
+    image: 'image.webp',
+    thumb: 'thumb.webp',
     presetBytes: presetFile.size,
   });
   res.json({ ok: true, id });
@@ -416,6 +463,13 @@ app.get('/api/presets/:id/image', (req, res) => {
   const m = approved(req.params.id);
   if (!m || !m.image) return res.status(404).end();
   res.sendFile(path.join(SUB_DIR, req.params.id, m.image));
+});
+
+app.get('/api/presets/:id/thumb', (req, res) => {
+  const m = approved(req.params.id);
+  const file = m && (m.thumb || m.image); // fall back to the full image if no thumb
+  if (!file) return res.status(404).end();
+  res.sendFile(path.join(SUB_DIR, req.params.id, file));
 });
 
 app.get('/api/presets/:id/preset', (req, res) => {
