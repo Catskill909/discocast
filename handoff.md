@@ -98,7 +98,13 @@ Truth docs, by topic. If a doc carries an archive banner, follow the pointer.
 
 ## Open issues
 
-### 1. Video import fails offline: "Could not strip audio from video" (diagnosed 2026-10-11, not fixed)
+### 1. ✅ FIXED 2026-10-11: video import failed offline ("Could not strip audio from video")
+
+> Fixed in `winamp-screen` by self-hosting `@ffmpeg/core@0.12.9`
+> (`load({ coreURL, wasmURL })`) and no longer caching a failed load.
+> Verified offline and under the prod CSP. It ships with the **next app build**
+> (macOS `.dmg` / Windows `.exe` / web deploy). Details are in
+> `winamp-screen/video-dev.md` §5.2. The write-up below is kept for history.
 
 **Symptom:** importing a video into the Preset Studio fails with *Could not
 strip audio from video*. It later works again with no changes.
@@ -133,5 +139,6 @@ needs no CSP change for third parties. Not started yet; per
 
 - Root `logo.png` is untracked and differs from `promo/logo.png`. Decide
   whether to keep it.
-- `getFFmpeg()` also adds a new `progress` listener on every transcode
-  (listeners pile up). Minor; fix alongside issue 1.
+- Bulk preset import (`customPresets.js`) still stores a video *with* audio if
+  the strip fails for some other reason (it only warns). That's rare now that
+  FFmpeg loads locally, but it's still a gap in the "no audio" rule.
