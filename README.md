@@ -35,6 +35,7 @@ discocast/
 ├── promo/             # the page + ALL assets — the web root
 │   ├── index.html
 │   ├── submit.html       # public preset-submission wizard  (/submit)
+│   ├── presets.html      # public approved-presets gallery  (/presets)
 │   ├── admin.html        # private review console           (/admin)
 │   ├── style.css
 │   ├── favicon.svg
@@ -57,6 +58,36 @@ The installers are **built in the main `winamp-screen` repo** and delivered here
   the `.exe` artifact; drop it into `promo/` here (stable name above), commit, push.
 
 The download buttons in `promo/index.html` point at those two exact filenames.
+Versioned copies the build script also writes (`DiscoCast Visualizer-1.0.*.dmg`)
+are gitignored; only the stable names ship.
+
+## What's New + popup
+
+Release notes live in **one place**: the `#whats-new` section of
+`promo/index.html`. Each release is an `<article class="release"
+data-release="YYYY-MM-DD">` block, newest first, and older notes sit under
+**Earlier updates**.
+
+The popup (`#beta-modal`) is filled by JS from the **newest** release block. It
+opens only if the visitor hasn't seen that release yet: on dismiss, the
+release's `data-release` id is saved in `localStorage`
+(`discocast-whats-new-seen`).
+
+**To announce a new build:** add a new release block at the top of
+`#whats-new` with a new `data-release` id, and move the previous block's items
+into **Earlier updates** if you want the page to stay short. Everyone sees the
+popup once more, showing only the new items. The popup's "Latest build" label
+comes from `version.json`, which the macOS build script writes.
+
+## Release checklist
+
+1. `winamp-screen/build-and-sign.sh`: macOS `.dmg` + `version.json` land in
+   `promo/`.
+2. GitHub → winamp-screen → Actions → **Build Windows Installer** → download the
+   artifact → save it as `promo/DiscoCast Visualizer_0.1.0_x64-setup.exe`.
+3. Add a release block to `#whats-new` (see above). Add bigger features to the
+   feature sections of the page too.
+4. Commit + push `main`, then deploy in Coolify.
 
 ## Run locally
 
