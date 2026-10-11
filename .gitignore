@@ -7,3 +7,6 @@ data/*
 
 # NOTE: the installers (promo/*.dmg, promo/*.exe) are intentionally NOT ignored.
 # They are committed with this repo and shipped to users by this app.
+
+# Versioned DMGs from build-and-sign.sh — only the stable DiscoCast-Visualizer.dmg ships.
+promo/DiscoCast Visualizer-*.dmg

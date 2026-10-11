@@ -6,6 +6,9 @@ the visualizer web app, the macOS `.dmg`, or the Windows `.exe` build.
 
 Live at: **https://discocast.supersoul.top**
 
+> New here / new chat? Read **[handoff.md](handoff.md)** first: system map across
+> both repos, release flow, doc catalogue, and open issues.
+
 ## What it does
 
 A tiny Express server (`server.js`) that:
@@ -25,6 +28,7 @@ A tiny Express server (`server.js`) that:
 
 ```
 discocast/
+├── handoff.md         # start here: system map, doc catalogue, open issues
 ├── server.js          # serve + counting + /stats + security headers (CSP)
 ├── package.json       # express only
 ├── Dockerfile         # node:20-alpine, serves on :3000
