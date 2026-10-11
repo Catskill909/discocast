@@ -140,9 +140,9 @@ needs no CSP change for third parties. Not started yet; per
 The player now preloads videos before switching, preloads the next preset
 ahead of time, and frees old videos. On desktop it reads files via the asset
 protocol instead of base64 over IPC. Write-up and measurements are in
-`winamp-screen/video-dev.md` §28. **Still to do:** confirm on desktop with
-`npm run tauri-dev`. The console should **not** show "Asset fetch failed,
-falling back to IPC read". It ships with the next app build.
+`winamp-screen/video-dev.md` §28. Verified in the real desktop app via
+`tauri dev`, where a WKWebView 1-second first-draw freeze was also found and
+fixed. It ships with the next app build.
 
 ### 2. Housekeeping
 
