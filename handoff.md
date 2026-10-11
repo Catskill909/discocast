@@ -162,6 +162,15 @@ with status). It's not duplicated here, so the two can't drift apart. Quick poin
    `app.set('trust proxy', 'loopback, linklocal, uniquelocal')`. Prod is direct
    DNS → Coolify Traefik, with no Cloudflare in front.
 
+## Possible future dev (not scheduled)
+
+- **Installer cleanup on first launch (macOS).** When the app first opens from /Applications and the installer
+  disk is still mounted, offer *"Eject the DiscoCast installer and move it to the Trash?"* Also warn if the app
+  is running straight from the DMG (not copied to Applications). Rust: find the image via `hdiutil info`,
+  then `hdiutil detach`. Trashing a DMG in ~/Downloads may trigger a macOS privacy prompt, so eject-only may be
+  the safer default. (A `.pkg` installer would get "move to Trash" for free, but needs a different cert and build.
+  Not worth it.) Deferred 2026-10-11 by the user: projector output first.
+
 ## Done 2026-10-11 (audit session)
 
 - **Offline video import:** FFmpeg core self-hosted. It used to come from
