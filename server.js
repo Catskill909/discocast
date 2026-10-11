@@ -218,6 +218,15 @@ fs.mkdirSync(SUB_DIR, { recursive: true });
 function newId() {
   return crypto.randomBytes(6).toString('hex');
 }
+// Every :id route param must look like a newId() — anything else (e.g. `..`,
+// which Express decodes from %2E%2E) would let path.join escape SUB_DIR, and
+// DELETE would then rm -rf the whole data volume.
+const ID_RE = /^[a-f0-9]{12}$/;
+app.param('id', (req, res, next, id) => {
+  if (!ID_RE.test(id)) return res.status(404).json({ error: 'not found' });
+  next();
+});
+
 function metaPath(id) { return path.join(SUB_DIR, id, 'meta.json'); }
 function readMeta(id) {
   try { return JSON.parse(fs.readFileSync(metaPath(id), 'utf8')); }

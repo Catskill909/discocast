@@ -139,6 +139,19 @@ needs no CSP change for third parties. Not started yet; per
 
 - Root `logo.png` is untracked and differs from `promo/logo.png`. Decide
   whether to keep it.
-- Bulk preset import (`customPresets.js`) still stores a video *with* audio if
-  the strip fails for some other reason (it only warns). That's rare now that
-  FFmpeg loads locally, but it's still a gap in the "no audio" rule.
+- `trust proxy` is set to `true` in `server.js`, so a client can spoof
+  `X-Forwarded-For`. That lets someone dodge the `/api/submit` rate limit and
+  skew the geo stats. The fix is the real hop count (probably `1` for Coolify's
+  Traefik), but confirm prod's proxy chain before changing it. If the number is
+  wrong, every visitor shares one IP, so the 5-per-hour submit limit becomes
+  site-wide.
+
+### Fixed 2026-10-11 (audit follow-ups)
+
+- **discocast:** `:id` route params are now checked against `^[a-f0-9]{12}$`.
+  Before, `DELETE /api/submissions/%2E%2E` (admin key required) ran
+  `rm -rf` on the whole `DATA_DIR`: all counts and submissions. Reproduced,
+  fixed, and re-tested.
+- **winamp-screen:** bulk/timeline preset import used to store a video *with*
+  its audio if stripping failed. Now that preset fails with a clear message in
+  the import results, and the layers already saved for it are deleted.
