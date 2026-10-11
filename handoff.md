@@ -5,7 +5,18 @@
 > Keep **Current state** and **Open items** up to date. Put deep detail in the
 > linked truth docs, not here.
 >
-> Last updated: **2026-10-11**
+> Last updated: **2026-10-11** (includes a full doc audit)
+
+## Read this first: how not to miss things
+
+1. **This file** gives the system map, current state, and open items.
+2. **`winamp-screen/README.md` → Platform support** shows what works on web vs the **macOS DMG** vs Windows.
+   **The DMG is the product.** Many browser features silently do nothing in the Mac app.
+3. **`winamp-screen/README.md` → Developer Documentation Index** lists *every* doc with its status
+   (complete as of 2026-10-11). Find the topic's **truth doc** there.
+4. **Before working on a topic, read its truth doc's status block** (e.g. `output-dev.md` Phase Board,
+   `animation-dev.md` dashboard). Don't rely on memory or this file for topic detail.
+5. `winamp-screen/CLAUDE.md` has the house rules (plan first, one truth doc per topic, desktop-first).
 
 ## Current state
 
@@ -14,6 +25,10 @@
   Windows `.exe` (GitHub Action).
 - **Site:** has a What's New section, and its popup now shows once per release
   (see [README → What's New + popup](README.md#whats-new--popup)).
+- **Projector / output on macOS (audited 2026-10-11):** the DMG can only **fullscreen the whole app** on a
+  display. Every output window (operator screen + clean projector, Composed Program) works **only in the
+  browser**. In the Mac app those buttons silently do nothing (`window.open` is unsupported in Tauri 1). NDI is
+  disabled in builds. See `output-dev.md` 🚨 block. This is the top open product gap.
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
@@ -110,32 +125,24 @@ bug.
 - **WKWebView gotcha:** the first `drawImage(video)` blocks for up to 1 s unless
   frames are already flowing. See `video-dev.md` §28.
 
-## Doc catalogue (winamp-screen)
+## Doc catalogue
 
-Truth docs, by topic. If a doc carries an archive banner, follow the pointer.
-
-| Topic | Doc |
-| --- | --- |
-| Promo site admin + preset sharing | `discocast-admin-dev.md` |
-| Promo site release notes / popup | `discocast/README.md` (this repo) |
-| Preset upload validation / safety | `discocast-preset-validation-dev.md` |
-| Promo split (history) | `promo-page-split.md` |
-| Preset Studio (editor) | `custom-preset-editor.md`, `docs/preset-editor/*` |
-| Video layers, transcoding, **preloading** | `video-dev.md` (§5.2 FFmpeg offline, §28 preloading), `video-tiling-dev.md`, `live-video-dev.md`, `video-cutout-edge-noise-dev.md` |
-| Transparent video | `transparent-dev.md` |
-| Output / multi-monitor / NDI | **`output-dev.md`** (app-/native-/visualizer-output are archive) |
-| Timeline | `timeline-editor.md` (`timeline-editor-archive.md` is archive) |
-| MilkDrop engine / import / packs | `milkdrop-dev.md`, `milkdrop-import-dev.md`, `milkdrop-pack-import.md`, `milkdrop-control-dev.md`, `milkdrop-tools-dev.md` |
-| Audio | `meyda-audio-dev.md`, `noise-gate-dev.md`, `live-input-dev.md`, `docs/audio-triggering.md`, `docs/spectral-flux-dev.md` |
-| Layers & effects | `animation-dev.md`, `text-layer-dev.md`, `shape-overlay-dev.md`, `image-texture-dev.md`, `apng-dev.md`, `solarize-dev.md`, `color-pallette-dev.md`, `3d-dev.md` |
-| Storage | `storage-audit-dev.md` |
-| macOS build / Windows build | `macos-app-generate.md` + `build-and-sign.sh`, `windows-dev.md` |
-| MIDI | `midi-dev.md` |
-| Bugs (open/closed write-ups) | `docs/bugs/*`, `macos-import-bug.md`, `preset-save-bug.md`, `user-guide-bug.md`, `width-height-video-bug.md` |
-| Older handoffs | `docs/handoff-animation-may2026.md`, `docs/handoff-milkdrop-research-may2026.md` |
+**The complete, maintained index is `winamp-screen/README.md` → Developer Documentation Index** (every `.md`,
+with status). It's not duplicated here, so the two can't drift apart. Quick pointers to the most-used truth docs:
+`output-dev.md` (output/projector), `video-dev.md` (video), `timeline-editor.md`, `custom-preset-editor.md`
+(Preset Studio), `animation-dev.md`, `milkdrop-tools-dev.md`, `apng-dev.md` (macOS-app video lessons),
+`discocast-admin-dev.md` (this site's admin + sharing).
 
 ## Open items
 
+0. **macOS projector output (top product gap).** Decide between building B2 (A: Rust second window +
+   frame readback; B: render on the projector + a control window), and/or document OBS window capture as an
+   optional route. Meanwhile, hide or relabel the dead *Open output window* button and the "Virtual Camera"
+   toggle in the desktop app. These are code changes in `winamp-screen`, so plan + go-ahead first. Details in
+   the `output-dev.md` 🚨 block.
+0b. **Preset validation was never built, but the public gallery shipped.** `discocast-preset-validation-dev.md`
+   requires validation *before* the gallery, because presets contain equations the app compiles and runs as code.
+   Today the only gate is manual admin approval in `/admin`. Review approvals carefully until it's built.
 1. **Deploy Beta Oct 11, 2026 in Coolify** if it hasn't been done yet. Both
    installers are pushed: the macOS `.dmg` was user-tested, and the Windows
    `.exe` came from GitHub run `38164720369`, built from commit `9fe567c`.
