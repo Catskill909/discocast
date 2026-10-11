@@ -139,12 +139,12 @@ needs no CSP change for third parties. Not started yet; per
 
 - Root `logo.png` is untracked and differs from `promo/logo.png`. Decide
   whether to keep it.
-- `trust proxy` is set to `true` in `server.js`, so a client can spoof
-  `X-Forwarded-For`. That lets someone dodge the `/api/submit` rate limit and
-  skew the geo stats. The fix is the real hop count (probably `1` for Coolify's
-  Traefik), but confirm prod's proxy chain before changing it. If the number is
-  wrong, every visitor shares one IP, so the 5-per-hour submit limit becomes
-  site-wide.
+- **Won't fix (decided 2026-10-11):** `trust proxy` is set to `true`, so a client
+  can spoof `X-Forwarded-For`. That lets someone dodge the 5-per-hour submit
+  limit and skew the geo stats. Low impact, since every submission still needs
+  admin approval. If it ever matters, the one-line fix is
+  `app.set('trust proxy', 'loopback, linklocal, uniquelocal')`. Prod is direct
+  DNS → Coolify Traefik, with no Cloudflare in front, so that setting is safe.
 
 ### Fixed 2026-10-11 (audit follow-ups)
 
