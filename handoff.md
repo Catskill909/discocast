@@ -9,9 +9,9 @@
 
 ## Current state
 
-- **Latest app build:** **Beta Oct 11, 2026**. The macOS `.dmg` is signed,
-  notarized, tested by the user, and pushed to `promo/`. The Windows `.exe` for
-  this build is **being added** (see Open items).
+- **Latest app build:** **Beta Oct 11, 2026**. Both installers are in `promo/`
+  and pushed: the macOS `.dmg` (signed, notarized, user-tested) and the
+  Windows `.exe` (GitHub Action).
 - **Site:** has a What's New section, and its popup now shows once per release
   (see [README → What's New + popup](README.md#whats-new--popup)).
 - **Both repos are pushed to `main`.** Production updates only when the user
@@ -23,8 +23,8 @@ DiscoCast is **two sibling repos** in `~/Desktop/`:
 
 | Repo | What it is | Ships as |
 | --- | --- | --- |
-| **`winamp-screen/`** | The actual app: **DiscoCast Visualizer**. Butterchurn/MilkDrop WebGL visualizer + Preset Studio (`editor.html`) + Timeline (`timeline.html`) + output window. Vanilla JS + Vite 8, wrapped in **Tauri 1** for desktop. | Web build (nginx Docker), macOS `.dmg` (signed + notarized), Windows `.exe` (GitHub Action) |
-| **`discocast/`** (this repo) | The **promo / download site** + community preset sharing. Small Express server. | Docker container on Coolify → **https://discocast.supersoul.top** |
+| **`winamp-screen/`** (GitHub: `Catskill909/visualizer`, public) | The actual app: **DiscoCast Visualizer**. Butterchurn/MilkDrop WebGL visualizer + Preset Studio (`editor.html`) + Timeline (`timeline.html`) + output window. Vanilla JS + Vite 8, wrapped in **Tauri 1** for desktop. | Web build (nginx Docker), macOS `.dmg` (signed + notarized), Windows `.exe` (GitHub Action) |
+| **`discocast/`** (this repo; GitHub: `Catskill909/discocast`) | The **promo / download site** + community preset sharing. Small Express server. | Docker container on Coolify → **https://discocast.supersoul.top** |
 
 `discocast` never touches the app code. It only hosts the installers that
 `winamp-screen` builds.
@@ -64,9 +64,11 @@ preset sharing).
 ## Releasing a new app build
 
 The step-by-step checklist is in
-[README → Release checklist](README.md#release-checklist). In short:
-`build-and-sign.sh` (mac) → Windows GitHub Action → add a What's New release
-block → push → deploy. The download buttons and counters only know the **two
+[README → Release checklist](README.md#release-checklist). In short: push
+`winamp-screen`, then build **macOS and Windows in parallel**
+(`./build-and-sign.sh` locally + `gh workflow run "Build Windows Installer" -R
+Catskill909/visualizer`). Download the `.exe`, add a What's New release block,
+push both installers, then deploy. The download buttons and counters only know the **two
 exact installer filenames** (`MAC_FILE` / `WIN_FILE` in `server.js`).
 
 The build script **kills every vite / `tauri dev` process** when it starts. A
@@ -134,11 +136,9 @@ Truth docs, by topic. If a doc carries an archive banner, follow the pointer.
 
 ## Open items
 
-1. **Windows `.exe` for Beta Oct 11, 2026.** The user runs the GitHub Action and
-   drops the installer into `promo/` as
-   `DiscoCast Visualizer_0.1.0_x64-setup.exe`. Then commit + push and deploy.
-   **Don't deploy before the `.exe` is in**, or Windows users get the June
-   build under the new release notes.
+1. **Deploy Beta Oct 11, 2026 in Coolify** if it hasn't been done yet. Both
+   installers are pushed: the macOS `.dmg` was user-tested, and the Windows
+   `.exe` came from GitHub run `38164720369`, built from commit `9fe567c`.
 2. **Possible follow-up (not requested yet):** adding a video in the Preset
    Studio (`_addVideoLayer`) likely hits the same one-time WKWebView 1-second
    first-draw freeze. The same warm-up as `_prepareVideo` would fix it.

@@ -81,13 +81,25 @@ comes from `version.json`, which the macOS build script writes.
 
 ## Release checklist
 
-1. `winamp-screen/build-and-sign.sh`: macOS `.dmg` + `version.json` land in
-   `promo/`.
-2. GitHub → winamp-screen → Actions → **Build Windows Installer** → download the
-   artifact → save it as `promo/DiscoCast Visualizer_0.1.0_x64-setup.exe`.
-3. Add a release block to `#whats-new` (see above). Add bigger features to the
+**Build macOS and Windows in parallel.** macOS builds locally and Windows builds
+on GitHub's Windows machine, so they don't compete for anything.
+
+1. **Push `winamp-screen` to `main` first.** The Windows build compiles what's
+   on GitHub, not your local folder.
+2. **Start both at the same time**, from the `winamp-screen` folder:
+   - Windows (GitHub repo **`Catskill909/visualizer`**, public, so Actions are
+     free):
+     `gh workflow run "Build Windows Installer" -R Catskill909/visualizer --ref main`
+   - macOS: `./build-and-sign.sh`. It builds, signs, and notarizes, then
+     writes the `.dmg` + `version.json` into `promo/`.
+3. **When Windows finishes** (~5–15 min):
+   `gh run download <run-id> -R Catskill909/visualizer`. Save the `.exe` as
+   `promo/DiscoCast Visualizer_0.1.0_x64-setup.exe` (`gh run list -R
+   Catskill909/visualizer` shows the run id).
+4. Add a release block to `#whats-new` (see above). Add bigger features to the
    feature sections of the page too.
-4. Commit + push `main`, then deploy in Coolify.
+5. Test the `.dmg`, then commit + push `main` with **both** installers, then
+   deploy in Coolify. Don't deploy with only one installer updated.
 
 ## Run locally
 
