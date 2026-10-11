@@ -135,6 +135,15 @@ with no `coreURL`, so `@ffmpeg/ffmpeg` fetches its ~30 MB core from
 needs no CSP change for third parties. Not started yet; per
 `winamp-screen/CLAUDE.md` it needs the user's go-ahead first.
 
+### 1b. ✅ FIXED 2026-10-11: stall when switching to a preset with video
+
+The player now preloads videos before switching, preloads the next preset
+ahead of time, and frees old videos. On desktop it reads files via the asset
+protocol instead of base64 over IPC. Write-up and measurements are in
+`winamp-screen/video-dev.md` §28. **Still to do:** confirm on desktop with
+`npm run tauri-dev`. The console should **not** show "Asset fetch failed,
+falling back to IPC read". It ships with the next app build.
+
 ### 2. Housekeeping
 
 - Root `logo.png` is untracked and differs from `promo/logo.png`. Decide
