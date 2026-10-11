@@ -135,11 +135,14 @@ with status). It's not duplicated here, so the two can't drift apart. Quick poin
 
 ## Open items
 
-0. **macOS projector output (top product gap).** Decide between building B2 (A: Rust second window +
-   frame readback; B: render on the projector + a control window), and/or document OBS window capture as an
-   optional route. Meanwhile, hide or relabel the dead *Open output window* button and the "Virtual Camera"
-   toggle in the desktop app. These are code changes in `winamp-screen`, so plan + go-ahead first. Details in
-   the `output-dev.md` 🚨 block.
+0. **macOS projector output (top product gap).**
+   - ✅ **Step 1 done 2026-10-11** (`winamp-screen` `987531a`, ships in the next app build): dead output-window and
+     Virtual Camera UI hidden in the desktop app, replaced with projector instructions; the macOS projector
+     checklist is in `output-dev.md`.
+   - ⏭ **Step 2 (decided: Approach A, gated by a test):** a Rust-created second window, fullscreen on the
+     projector, showing frames read back from the main canvas (transport proven by NDI N0). **First a quick test
+     build on the real projector wired to the Mac mini**, to measure delay and smoothness. If it lags, fall back to
+     B (render on the projector + a control window) or Syphon. Needs the projector connected; plan + go-ahead first.
 0b. **Preset validation was never built, but the public gallery shipped.** `discocast-preset-validation-dev.md`
    requires validation *before* the gallery, because presets contain equations the app compiles and runs as code.
    Today the only gate is manual admin approval in `/admin`. Review approvals carefully until it's built.
