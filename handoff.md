@@ -42,10 +42,17 @@ on the Mac mini). What blocked testing was **hardware and a two-machine setup**,
   Windows `.exe` (GitHub Action).
 - **Site:** has a What's New section, and its popup now shows once per release
   (see [README → What's New + popup](README.md#whats-new--popup)).
-- **Projector / output on macOS (audited 2026-10-11):** the DMG can only **fullscreen the whole app** on a
-  display. Every output window (operator screen + clean projector, Composed Program) works **only in the
-  browser**. In the Mac app those buttons silently do nothing (`window.open` is unsupported in Tauri 1). NDI is
-  disabled in builds. See `output-dev.md` 🚨 block. This is the top open product gap.
+- **Projector / output on macOS:** the **released** build can only fullscreen the whole app on a display (its
+  *Open output window* button silently does nothing: `window.open` is unsupported in Tauri 1). **On `main`** the
+  player/editor output window now works (B2 beta, ~25 ms); Timeline output is still web-only (hidden on desktop).
+  NDI is disabled. The `output-dev.md` 🚨 table has released vs code side by side.
+- **On `main` but NOT in a released build yet** (put these in the next What's New):
+  - **Clean projector output window** for the player/editor (B2 beta). *Before release:* hide the `D` test readout
+    by default, and pass the projector test.
+  - **Desktop UI hides features that can't work there** (Timeline output routing, Virtual Camera) and shows
+    projector guidance instead.
+  - **Fix:** quitting the app left `caffeinate` running, so the display never slept and macOS showed the
+    "App Running in Background" notice.
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
@@ -124,7 +131,10 @@ bug.
   Keep `@ffmpeg/core` matched to `@ffmpeg/ffmpeg`'s `CORE_VERSION`.
 - `src-tauri/`: Tauri 1 shell. Stored media is read via the **asset protocol**
   (`get_blob_path` + `convertFileSrc`; `$APPDATA/images/*` is in `assetScope`).
-  Sidecars in `src-tauri/binaries/`: a native `ffmpeg` and `ndi-send`.
+  Sidecars in `src-tauri/binaries/`: a native `ffmpeg` (bundled) and `ndi-send` (**not** bundled; NDI is parked).
+- **Desktop output (B2):** `src/output/nativeFeed.js` (copies frames after `render()` via `engine.addFrameTap`),
+  `src/output/nativeOutputWindow.js` (output window), Rust `output_*` commands + the `dcframe://` protocol.
+  `src/platform.js` sets `html.is-desktop` for `data-web-only` / `data-desktop-only` markup.
 - **CSPs live in two places:** `src-tauri/tauri.conf.json` (desktop) and
   `nginx.conf` (web). Anything loaded from another origin must be allowed in
   both.
@@ -141,6 +151,9 @@ bug.
   timings mislead.
 - **WKWebView gotcha:** the first `drawImage(video)` blocks for up to 1 s unless
   frames are already flowing. See `video-dev.md` §28.
+- **Test DMG without touching the site:** `PROMO_REPO=<scratch dir with promo/index.html> ./build-and-sign.sh`
+  writes the signed DMG there instead of into `discocast/promo/`.
+- **Projector hardware:** read the checklist + the hub finding in `output-dev.md` *before* plugging anything in.
 
 ## Doc catalogue
 
@@ -153,15 +166,14 @@ with status). It's not duplicated here, so the two can't drift apart. Quick poin
 ## Open items
 
 0. **macOS projector output (top product gap).**
-   - ✅ **Step 1 done 2026-10-11** (`winamp-screen` `987531a`, ships in the next app build): dead output-window and
-     Virtual Camera UI hidden in the desktop app, replaced with projector instructions; the macOS projector
-     checklist is in `output-dev.md`.
+   - ✅ **Step 1 done 2026-10-11** (`987531a`): output UI that can't work on desktop is hidden there (Timeline
+     routing/Composed Program, Virtual Camera); the macOS projector checklist is in `output-dev.md`. (The
+     player/editor output panel was hidden in this step, then re-enabled by step 2.)
    - 🟢 **Step 2 BUILT 2026-10-11 for player + editor** (`winamp-screen` `6fcc658`): *Send to display → Open
      output window* works in the desktop app. A Rust-created window pulls copied frames over `dcframe://`. Measured
      in `tauri dev`: **1080p/30, ~25 ms delay, no main-window cost.** Details in `output-dev.md` 🟢 B2 block.
-   - ⏭ **Pending:** the user's real-projector test (wired to the **Mac mini**; MacBook only via Universal
-     Control) using a signed test DMG built to a scratch folder (not in `promo/`). Check a **video preset** in
-     the DMG (VP9 `SecurityError` risk). If it passes: Timeline next (feed its composer canvas into the same pipe),
+   - ⏭ **Pending:** the user's real-projector test. See **▶ NEXT SESSION** at the top (Mac mini only + USB-C→HDMI
+     cable; the test DMG is on the Mac mini's Desktop). Check a **video preset** in the DMG (VP9 `SecurityError` risk). If it passes: Timeline next (feed its composer canvas into the same pipe),
      then a release. Readout default (shown, toggle with **D**) should become hidden before release.
 0b. **Preset validation was never built, but the public gallery shipped.** `discocast-preset-validation-dev.md`
    requires validation *before* the gallery, because presets contain equations the app compiles and runs as code.
@@ -210,3 +222,10 @@ with status). It's not duplicated here, so the two can't drift apart. Quick poin
   `logo.png` deleted.
 - **Site:** What's New section + once-per-release popup; footer links wrap on
   phones.
+- **Releases:** Beta Oct 11, 2026 shipped (DMG + Windows `.exe`); macOS + Windows builds now run in parallel
+  (Windows via `gh`, repo `Catskill909/visualizer`).
+- **Doc audit:** README platform-support matrix; all docs indexed with true status; desktop-first rule in
+  `CLAUDE.md`; output truth doc shows released vs code.
+- **Desktop output:** dead UI hidden, then the B2 output window built + measured (1080p/30, ~25 ms).
+- **Fixed:** orphaned `caffeinate` after quit (on `main`, next build).
+- **Hardware finding:** the cheap USB-C hub gives no video on the Mac mini (USB Billboard). Use a USB-C→HDMI cable.
