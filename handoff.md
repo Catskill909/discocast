@@ -18,6 +18,21 @@
    `animation-dev.md` dashboard). Don't rely on memory or this file for topic detail.
 5. `winamp-screen/CLAUDE.md` has the house rules (plan first, one truth doc per topic, desktop-first).
 
+## ▶ NEXT SESSION STARTS HERE: projector test, ONE machine (user's explicit wish, 2026-10-11)
+
+The output window software is **done** (test DMG: `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-2.dmg`
+on the Mac mini). What blocked testing was **hardware and a two-machine setup**, not the app.
+- **Use only the Mac mini.** App + LG + projector + Claude's terminal are all on it. Do **not** involve the MacBook
+  (Universal Control + AirPlay + the hub turned this into a repeat of the June nightmare; the user found it
+  exhausting).
+- **Cable:** a USB-C→HDMI cable (Apple Multiport ~$69, or Anker/UGREEN ~$15) **straight into a back port of the
+  Mac mini**. The cheap hub gives **no video on the mini** (USB Billboard class, verified). Don't retry it.
+- **Claude verifies each step from the terminal:** `system_profiler SPDisplaysDataType` must list the projector
+  next to the LG (Mirror: Off). If the projector shows a picture but isn't listed, it's AirPlay: stop it.
+- **Test:** O → pick the projector → Fullscreen on open → Open output window. Check timing, smoothness, and a
+  video preset (D = stats).
+- **Keep it calm and short.** One step at a time; no multi-machine troubleshooting.
+
 ## Current state
 
 - **Latest app build:** **Beta Oct 11, 2026**. Both installers are in `promo/`
