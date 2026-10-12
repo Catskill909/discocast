@@ -32,6 +32,8 @@ on the Mac mini). What blocked testing was **hardware and a two-machine setup**,
 - **Test:** O → pick the projector → Fullscreen on open → Open output window. Check timing, smoothness, and a
   video preset (D = stats).
 - **Keep it calm and short.** One step at a time; no multi-machine troubleshooting.
+- **Status 2026-10-11:** user ordered an **onn USB-C→HDMI cable** (4K@30 = 1080p@60, fine for the 1080p Vankyo).
+  Fallback if anything acts up: a dedicated keyboard + mouse on the Mac mini (no Universal Control at all).
 
 ## Current state
 
