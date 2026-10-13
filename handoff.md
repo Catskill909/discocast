@@ -41,6 +41,11 @@ in `main.rs` (covered window: 0 fps → 100 fps, measured). Test build with ever
 dropdowns visible. Also fixed: desktop-only hiding didn't apply in the player (runtime `<style>` blocked by Tauri's
 CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg`: **user confirmed the new menu looks great.**
 
+**Then: long audio files load instantly (2026-10-12, `b115d8b`).** The desktop picker used to read the whole file and
+base64 it over IPC (a 245 MB / 1h47 MP3 = 25 s of spinner). Now it streams from disk (`pick_audio_path` + asset protocol,
+shared `pickAudioFileDesktop()` in player/editor/timeline): 0.4 s to playing, seek 55 ms, analyser OK. Test build:
+`~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-6.dmg` (all fixes so far; older test DMGs deleted).
+
 **To check next:** in TEST-5 the user clicked the player's **Live** (🎤) button by accident and said the app froze and "the menu
 doesn't load". This likely matches the documented macOS limit in `winamp-screen/live-input-dev.md` (main page: the device
 picker can hang on first connect because the AudioContext was created without a user gesture). Reproduce in `tauri dev`
@@ -78,6 +83,8 @@ before fixing; it's unrelated to the output work.
     "App Running in Background" notice.
   - **Fix:** the player froze for good on custom presets with 1–3 shapes; the render loop now survives frame errors.
   - **Fix:** visuals + projector froze when another app covered the DiscoCast window; it now keeps rendering.
+  - **Faster:** long audio files stream from disk (2-hour mix plays in 0.4 s instead of 25 s).
+  - **Output panel redesign** (display buttons, Send/Stop, Fullscreen switch).
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
