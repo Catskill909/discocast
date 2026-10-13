@@ -45,7 +45,7 @@ CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg`: *
 base64 it over IPC (a 245 MB / 1h47 MP3 = 25 s of spinner). Now it streams from disk (`pick_audio_path` + asset protocol,
 shared `pickAudioFileDesktop()` in player/editor/timeline): 0.4 s to playing, seek 55 ms, analyser OK. Test build:
 `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-6.dmg` (all fixes so far; older test DMGs deleted).
-**✅ User confirmed TEST-6 "works fantastic" (2026-10-12).** Ready for a release once the `D` readout is hidden by default.
+**✅ User confirmed TEST-6 "works fantastic" (2026-10-12).** **Released as Beta Oct 12, 2026.**
 
 **To check next:** in TEST-5 the user clicked the player's **Live** (🎤) button by accident and said the app froze and "the menu
 doesn't load". This likely matches the documented macOS limit in `winamp-screen/live-input-dev.md` (main page: the device
@@ -66,26 +66,19 @@ before fixing; it's unrelated to the output work.
 
 ## Current state
 
-- **Latest app build:** **Beta Oct 11, 2026**. Both installers are in `promo/`
-  and pushed: the macOS `.dmg` (signed, notarized, user-tested) and the
-  Windows `.exe` (GitHub Action).
+- **Latest app build:** **Beta Oct 12, 2026** (`winamp-screen` `f1fc2cc`). Both installers are in `promo/` and pushed:
+  the macOS `.dmg` (signed, notarized, user-tested as TEST-6) and the Windows `.exe` (GitHub run `38339443680`, same
+  commit). **Windows was not tested** for the new desktop output window or audio streaming.
 - **Site:** has a What's New section, and its popup now shows once per release
   (see [README → What's New + popup](README.md#whats-new--popup)).
 - **Projector / output on macOS:** the **released** build can only fullscreen the whole app on a display (its
   *Open output window* button silently does nothing: `window.open` is unsupported in Tauri 1). **On `main`** the
   player/editor output window now works (B2 beta, ~25 ms); Timeline output is still web-only (hidden on desktop).
   NDI is disabled. The `output-dev.md` 🚨 table has released vs code side by side.
-- **On `main` but NOT in a released build yet** (put these in the next What's New):
-  - **Clean projector output window** for the player/editor (B2 beta). *Before release:* hide the `D` test readout
-    by default, and pass the projector test.
-  - **Desktop UI hides features that can't work there** (Timeline output routing, Virtual Camera) and shows
-    projector guidance instead.
-  - **Fix:** quitting the app left `caffeinate` running, so the display never slept and macOS showed the
-    "App Running in Background" notice.
-  - **Fix:** the player froze for good on custom presets with 1–3 shapes; the render loop now survives frame errors.
-  - **Fix:** visuals + projector froze when another app covered the DiscoCast window; it now keeps rendering.
-  - **Faster:** long audio files stream from disk (2-hour mix plays in 0.4 s instead of 25 s).
-  - **Output panel redesign** (display buttons, Send/Stop, Fullscreen switch).
+- **Released in Beta Oct 12, 2026:** clean projector output window (macOS; Windows untested), freeze fixes (custom
+  shapes, unkillable render loop, keeps rendering when covered), instant long-audio streaming, Output panel redesign,
+  caffeinate fix, `D` readout hidden by default. Site What's New + feature cards updated (Virtual Camera card replaced;
+  Timeline per-zone routing marked browser-only).
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
