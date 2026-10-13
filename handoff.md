@@ -35,7 +35,11 @@ first frame error. Both fixed + verified (4-min favorites cycle, 0 errors). Writ
 **Then a second freeze cause (fixed 2026-10-12, `b8b9828`):** switching to another app over the DiscoCast window froze
 it, because WKWebView pauses rendering for covered windows. Fixed by turning occlusion detection off + an App Nap opt-out
 in `main.rs` (covered window: 0 fps → 100 fps, measured). Test build with everything:
-`~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-4.dmg` (user to confirm).
+`~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-4.dmg`: **user confirmed everything working.**
+
+**Then the Output panel redesign (2026-10-12, `1624b77`):** display buttons, Fullscreen switch, Send/Stop button, Tips;
+dropdowns visible. Also fixed: desktop-only hiding didn't apply in the player (runtime `<style>` blocked by Tauri's
+CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg` (user to confirm).
 
 **Next steps (pick with the user):**
 1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
