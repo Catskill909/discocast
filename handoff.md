@@ -34,6 +34,17 @@ on the Mac mini). What blocked testing was **hardware and a two-machine setup**,
 - **Keep it calm and short.** One step at a time; no multi-machine troubleshooting.
 - **Status 2026-10-11:** user ordered an **onn USB-C→HDMI cable** (4K@30 = 1080p@60, fine for the 1080p Vankyo).
   Fallback if anything acts up: a dedicated keyboard + mouse on the Mac mini (no Universal Control at all).
+- **2026-10-12, cable arrived: the hardware WORKS.** On the Mac mini's USB-C port: an active DisplayPort link (5.4 Gbps)
+  and the projector's EDID read ("S2-TEK TV", 1920×1080, via HDMI). But macOS treats it as a **TV** and keeps it
+  **switched off** until you choose what to show (Displays: *When connected to TV → Ask What to Show*). The
+  projector then shows macOS's own placeholder "Choose to mirror or extend…". Choosing **Screen Mirroring → S2-TEK TV →
+  Choose Content → Extend** makes the **projector the main display**, so the LG goes black (the June blackout); the user
+  cancelled. **Fix ready:** `winamp-screen/scripts/keep-lg-main.swift` (build with `swiftc -O … -o keep-lg-main`, run
+  it, *then* click Extend). It waits for the 2nd display, then makes the LG main (origin 0,0), puts the projector to
+  its right, and turns mirroring off. It ran twice but the user didn't click Extend (stepped away). **Next:** run the
+  helper → user clicks Extend and doesn't cancel → verify with `system_profiler` → the 3-click output test.
+  Optional permanent fix: Displays → *When connected to TV* → Extend (stops the "Ask" step). Note that "Paul's
+  MacBook Air" appears in the Mac mini's Displays pane only because of Universal Control; it isn't a display.
 
 ## Current state
 
