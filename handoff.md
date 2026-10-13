@@ -45,6 +45,7 @@ CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg`: *
 base64 it over IPC (a 245 MB / 1h47 MP3 = 25 s of spinner). Now it streams from disk (`pick_audio_path` + asset protocol,
 shared `pickAudioFileDesktop()` in player/editor/timeline): 0.4 s to playing, seek 55 ms, analyser OK. Test build:
 `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-6.dmg` (all fixes so far; older test DMGs deleted).
+**✅ User confirmed TEST-6 "works fantastic" (2026-10-12).** Ready for a release once the `D` readout is hidden by default.
 
 **To check next:** in TEST-5 the user clicked the player's **Live** (🎤) button by accident and said the app froze and "the menu
 doesn't load". This likely matches the documented macOS limit in `winamp-screen/live-input-dev.md` (main page: the device
