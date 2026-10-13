@@ -22,7 +22,7 @@
       <div class="promo-modal-header">
         <div class="promo-modal-eyebrow">Early Beta Preview</div>
         <h2 id="beta-modal-title">Thanks for helping test The DiscoCast Visualizer.</h2>
-        <p class="promo-modal-build">Latest build: <span id="app-version">Beta Oct 12, 2026</span></p>
+        <p class="promo-modal-build">Latest version: <span id="app-version">0.9 (Beta) · Oct 12, 2026</span></p>
       </div>
       <div id="beta-modal-copy" class="promo-modal-scroll-area">
         <p class="promo-modal-subtitle">What's new in this build:</p>
@@ -109,7 +109,7 @@
       </div>
       <div class="release-notes fade-in">
         <article class="release" data-release="2026-10-12">
-          <h3 class="release-title">Beta Oct 12, 2026</h3>
+          <h3 class="release-title">Version 0.9 · Oct 12, 2026</h3>
           <ul class="release-list">
             <li><strong>Clean projector output (macOS)</strong> - Press <strong>O</strong>, pick your projector or second
               screen, and hit <strong>Send</strong>: the visuals go full-screen there, and all your controls stay on
@@ -1185,6 +1185,7 @@
       <div class="cta-card fade-in">
         <h2>Download</h2>
         <p>
+          <strong class="download-version">Version <span data-app-version>0.9 (Beta) · Oct 12, 2026</span></strong><br />
           Free download of early beta for macOS and Windows. Mac users: open the .dmg, drag the app to Applications.
           Windows users:
           run the .exe installer.
@@ -1255,8 +1256,10 @@
       fetch('./version.json?v=' + Date.now())
         .then(r => r.json())
         .then(d => {
-          const el = document.getElementById('app-version');
-          if (el && d.version) el.textContent = d.version;
+          // {"version":"0.9","channel":"Beta","date":"Oct 12, 2026"} → "0.9 (Beta) · Oct 12, 2026"
+          if (!d.version) return;
+          const text = d.date ? `${d.version} (${d.channel || 'Beta'}) · ${d.date}` : d.version;
+          document.querySelectorAll('#app-version, [data-app-version]').forEach((el) => { el.textContent = text; });
         })
         .catch(() => { });
 

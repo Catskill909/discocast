@@ -4,7 +4,7 @@
 > are, the current state, and **what to do next**. Keep *Next tasks* and *Current state* true. Put deep detail
 > in the linked truth docs, not here.
 >
-> Last updated: **2026-10-12** (end-of-day audit)
+> Last updated: **2026-10-13** (version numbers)
 
 ## Read this first: how not to miss things
 
@@ -22,9 +22,9 @@
 
 **Focus: macOS.** The Mac is what goes to the user's upcoming **live dance event with a projector**.
 
-1. **Deploy Beta Oct 12, 2026 in Coolify** (if not done yet), then verify the live site:
-   `https://discocast.supersoul.top/version.json` says *Beta Oct 12, 2026*, both download buttons serve the new
-   files, and the What's New popup shows the Oct 12 release once.
+1. **Deploy the version-number change in Coolify** (pushed 2026-10-13): the site shows *Version 0.9 (Beta) ·
+   Oct 12, 2026* and downloads save as `DiscoCast-Visualizer-0.9.dmg` / `-0.9-Windows.exe`. Check after deploy.
+   (Beta Oct 12 itself is already live and verified.)
 2. **Gig dry run on the Mac** (offered; not started): projector connected (setup below), a full set of
    favorites auto-cycle, a long mix, switching to other apps, maybe the Timeline. Find rough edges at home, not at
    the venue.
@@ -67,7 +67,7 @@ Full checklist + hardware findings: `winamp-screen/output-dev.md` (🎯 checklis
 
 ## Current state
 
-- **Latest release: Beta Oct 12, 2026** (`winamp-screen` `f1fc2cc`), pushed to `discocast/promo/`: macOS `.dmg`
+- **Latest release: Version 0.9 (Beta), Oct 12, 2026** (`winamp-screen` `f1fc2cc`; **live** on the site since 2026-10-13), pushed to `discocast/promo/`: macOS `.dmg`
   (signed, notarized, user-tested) + Windows `.exe` (GitHub run `38339443680`, same commit). Site What's New +
   feature cards updated (the Virtual Camera card was replaced with real projector output; Timeline per-zone routing
   is marked browser-only).
@@ -114,7 +114,8 @@ Full detail: [README.md](README.md) (layout, deploy, What's New + popup, release
 
 ## Releasing a new app build
 
-Checklist: [README → Release checklist](README.md#release-checklist). In short: push `winamp-screen` → build
+Checklist: [README → Release checklist](README.md#release-checklist). In short: **bump the version** in
+`src-tauri/tauri.conf.json` (0.9.0 → 0.9.1 → … → 1.0.0) → push `winamp-screen` → build
 **macOS and Windows in parallel** (`./build-and-sign.sh` + `gh workflow run "Build Windows Installer" -R
 Catskill909/visualizer --ref main`) → `gh run download` the `.exe` into `promo/` → add a What's New release block
 (new `data-release` id) → push → user deploys. Download buttons + counters only know the **two exact installer
@@ -174,7 +175,11 @@ video lessons), `live-input-dev.md`, `discocast-admin-dev.md`.
 
 ## Changelog
 
-**2026-10-12** (released as **Beta Oct 12, 2026**)
+**2026-10-13**
+- Release numbering: Oct 12 release = **Version 0.9**; one version in `tauri.conf.json`; site shows it under the
+  download buttons; downloads save as `DiscoCast-Visualizer-0.9.dmg` / `-0.9-Windows.exe`.
+
+**2026-10-12** (released as **Beta Oct 12, 2026** = Version 0.9)
 - **Projector output verified on real hardware.** Mac mini → onn USB-C→HDMI → Vankyo, 30 fps, ~40–53 ms.
 - **Freeze fixes:**
   - custom presets with 1–3 shapes crashed every frame in the player (now padded);

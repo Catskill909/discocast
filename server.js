@@ -173,6 +173,29 @@ function recordPresetDownload(id, req) {
   saveCounts();
 }
 
+// --- friendly download filenames ---------------------------------------------
+// The installer URLs stay fixed (buttons + counters depend on them), but the
+// saved file is named with the release version from promo/version.json, e.g.
+// "DiscoCast-Visualizer-0.9.dmg" / "DiscoCast-Visualizer-0.9-Windows.exe".
+function releaseVersion() {
+  try {
+    const v = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'version.json'), 'utf8')).version;
+    return /^\d+(\.\d+){0,2}$/.test(v || '') ? v : '';   // plain numbers only (safe in a header)
+  } catch { return ''; }
+}
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  let p = req.path;
+  try { p = decodeURIComponent(req.path); } catch { /* keep raw */ }
+  if (p !== MAC_FILE && p !== WIN_FILE) return next();
+  const v = releaseVersion();
+  const name = p === MAC_FILE
+    ? `DiscoCast-Visualizer${v ? '-' + v : ''}.dmg`
+    : `DiscoCast-Visualizer${v ? '-' + v : ''}-Windows.exe`;
+  res.set('Content-Disposition', `attachment; filename="${name}"`);
+  next();
+});
+
 // --- counting middleware (runs BEFORE static, then passes through) ----------
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();

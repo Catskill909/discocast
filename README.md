@@ -84,6 +84,11 @@ comes from `version.json`, which the macOS build script writes.
 **Build macOS and Windows in parallel.** macOS builds locally and Windows builds
 on GitHub's Windows machine, so they don't compete for anything.
 
+0. **Bump the version** in `winamp-screen/src-tauri/tauri.conf.json` → `package.version`: `0.9.0` → `0.9.1` → …
+   → `1.0.0` (shown as 0.9, 0.9.1, … 1.0). It's the one version for the Mac app, the Windows installer, the site,
+   and the download filenames. The build script writes it into `promo/version.json`
+   (`{"version","channel","date"}`), and the server names downloads `DiscoCast-Visualizer-<version>.dmg` /
+   `-<version>-Windows.exe` (`Content-Disposition`; the URLs stay fixed for the buttons + counters).
 1. **Push `winamp-screen` to `main` first.** The Windows build compiles what's
    on GitHub, not your local folder.
 2. **Start both at the same time**, from the `winamp-screen` folder:
