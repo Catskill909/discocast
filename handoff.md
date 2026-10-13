@@ -32,7 +32,10 @@ picks **Screen Mirroring → S2-TEK TV → Choose Content → Extend**. The help
 **⚠ Then a freeze on the projector test (fixed 2026-10-12, `a8bf8bd`):** the player froze for good mid-show. Cause: custom presets
 with 1–3 Custom Shapes threw every frame (the editor pads shapes to 4, the player didn't), and the render loop died on the
 first frame error. Both fixed + verified (4-min favorites cycle, 0 errors). Write-up: `winamp-screen/docs/bugs/player-freeze-custom-shapes.md`.
-Test build: `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-3.dmg` (user to confirm).
+**Then a second freeze cause (fixed 2026-10-12, `b8b9828`):** switching to another app over the DiscoCast window froze
+it, because WKWebView pauses rendering for covered windows. Fixed by turning occlusion detection off + an App Nap opt-out
+in `main.rs` (covered window: 0 fps → 100 fps, measured). Test build with everything:
+`~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-4.dmg` (user to confirm).
 
 **Next steps (pick with the user):**
 1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
@@ -65,6 +68,7 @@ Test build: `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-3.dmg` (u
   - **Fix:** quitting the app left `caffeinate` running, so the display never slept and macOS showed the
     "App Running in Background" notice.
   - **Fix:** the player froze for good on custom presets with 1–3 shapes; the render loop now survives frame errors.
+  - **Fix:** visuals + projector froze when another app covered the DiscoCast window; it now keeps rendering.
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
