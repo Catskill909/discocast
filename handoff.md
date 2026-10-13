@@ -104,7 +104,8 @@ DiscoCast is **two sibling repos** in `~/Desktop/`:
   tallies (offline `geoip-lite`, no raw IPs), preset submissions, the admin API, and the public approved-presets
   API.
 - Pages in `promo/`: `index.html` (promo + What's New + once-per-release popup), `submit.html` (`/submit`),
-  `admin.html` (`/admin`, key-gated), `presets.html` (`/presets` gallery).
+  `admin.html` (`/admin`, key-gated), `presets.html` (`/presets` gallery), `help.html` (`/help` User Guide,
+  generated from the app's Help by `scripts/build-help.mjs`; never hand-edit).
 - Data: `DATA_DIR` (`/data` volume in prod): `counts.json` + `submissions/<id>/…`.
 - Auth: env `STATS_KEY` gates `/admin`, `/api/*` admin routes, `/stats.json` (open if unset). `:id` params must
   match `^[a-f0-9]{12}$`.
@@ -176,6 +177,9 @@ video lessons), `live-input-dev.md`, `discocast-admin-dev.md`.
 ## Changelog
 
 **2026-10-13**
+- **Website User Guide at `/help`**: generated from the app's in-app Help (`node scripts/build-help.mjs`), with
+  the screenshots, search, deep links (`/help#output`), and phone layout. Linked from the site nav, footer and
+  `/presets`.
 - **User Guide screenshots:** 14 close-ups (player, presets, cycling, audio tuning, output panel, Studio tabs,
   layers, animate, timeline) in `winamp-screen/public/guide/`, made by `scripts/capture-guide-shots.mjs`.
   The Help's Output section now explains *Send to a projector*; Virtual Camera is marked web-only there.
