@@ -52,6 +52,10 @@ doesn't load". This likely matches the documented macOS limit in `winamp-screen/
 picker can hang on first connect because the AudioContext was created without a user gesture). Reproduce in `tauri dev`
 before fixing; it's unrelated to the output work.
 
+**Focus (user, 2026-10-12): macOS.** The Mac is what goes to the user's upcoming **live dance event with a projector**,
+so gig-readiness on the Mac comes first. **Windows:** the user has an old Windows laptop for testing only and will
+test the Beta Oct 12 `.exe` in the days ahead (projector output + audio streaming are untested there).
+
 **Next steps (pick with the user):**
 1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
    desktop UI cleanup, caffeinate fix). See *On `main` but NOT in a released build* below.
