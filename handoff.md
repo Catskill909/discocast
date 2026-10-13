@@ -29,6 +29,11 @@ projector as a "TV" and asks first → run `winamp-screen/scripts/keep-lg-main.s
 picks **Screen Mirroring → S2-TEK TV → Choose Content → Extend**. The helper puts the LG back as main. Then in the app:
 **O → Display 2 → Fullscreen on open → Open output window**. (`D` toggles the stats readout.)
 
+**⚠ Then a freeze on the projector test (fixed 2026-10-12, `a8bf8bd`):** the player froze for good mid-show. Cause: custom presets
+with 1–3 Custom Shapes threw every frame (the editor pads shapes to 4, the player didn't), and the render loop died on the
+first frame error. Both fixed + verified (4-min favorites cycle, 0 errors). Write-up: `winamp-screen/docs/bugs/player-freeze-custom-shapes.md`.
+Test build: `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-3.dmg` (user to confirm).
+
 **Next steps (pick with the user):**
 1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
    desktop UI cleanup, caffeinate fix). See *On `main` but NOT in a released build* below.
@@ -38,6 +43,7 @@ picks **Screen Mirroring → S2-TEK TV → Choose Content → Extend**. The help
    presets exist** on the Mac mini (checked in the app's local storage + `presets/` folder). Ask where they saw
    "none" (♥ tab vs. cycle panel). Also offered: remember cycle settings (Favorites only / Random / interval) across
    launches. Today "Favorites only" resets to off on every launch.
+   (The user later said "favorites ran out"; that was actually the freeze above.)
 4. Optional: an in-app "make this my main screen" button (same fix as the helper).
 
 ## Current state
@@ -58,6 +64,7 @@ picks **Screen Mirroring → S2-TEK TV → Choose Content → Extend**. The help
     projector guidance instead.
   - **Fix:** quitting the app left `caffeinate` running, so the display never slept and macOS showed the
     "App Running in Background" notice.
+  - **Fix:** the player froze for good on custom presets with 1–3 shapes; the render loop now survives frame errors.
 - **Both repos are pushed to `main`.** Production updates only when the user
   deploys in Coolify.
 
