@@ -18,33 +18,27 @@
    `animation-dev.md` dashboard). Don't rely on memory or this file for topic detail.
 5. `winamp-screen/CLAUDE.md` has the house rules (plan first, one truth doc per topic, desktop-first).
 
-## ▶ NEXT SESSION STARTS HERE: projector test, ONE machine (user's explicit wish, 2026-10-11)
+## ▶ NEXT SESSION STARTS HERE
 
-The output window software is **done** (test DMG: `~/Desktop/DiscoCast-test/DiscoCast-Visualizer-OUTPUT-TEST-2.dmg`
-on the Mac mini). What blocked testing was **hardware and a two-machine setup**, not the app.
-- **Use only the Mac mini.** App + LG + projector + Claude's terminal are all on it. Do **not** involve the MacBook
-  (Universal Control + AirPlay + the hub turned this into a repeat of the June nightmare; the user found it
-  exhausting).
-- **Cable:** a USB-C→HDMI cable (Apple Multiport ~$69, or Anker/UGREEN ~$15) **straight into a back port of the
-  Mac mini**. The cheap hub gives **no video on the mini** (USB Billboard class, verified). Don't retry it.
-- **Claude verifies each step from the terminal:** `system_profiler SPDisplaysDataType` must list the projector
-  next to the LG (Mirror: Off). If the projector shows a picture but isn't listed, it's AirPlay: stop it.
-- **Test:** O → pick the projector → Fullscreen on open → Open output window. Check timing, smoothness, and a
-  video preset (D = stats).
-- **Keep it calm and short.** One step at a time; no multi-machine troubleshooting.
-- **Status 2026-10-11:** user ordered an **onn USB-C→HDMI cable** (4K@30 = 1080p@60, fine for the 1080p Vankyo).
-  Fallback if anything acts up: a dedicated keyboard + mouse on the Mac mini (no Universal Control at all).
-- **2026-10-12, cable arrived: the hardware WORKS.** On the Mac mini's USB-C port: an active DisplayPort link (5.4 Gbps)
-  and the projector's EDID read ("S2-TEK TV", 1920×1080, via HDMI). But macOS treats it as a **TV** and keeps it
-  **switched off** until you choose what to show (Displays: *When connected to TV → Ask What to Show*). The
-  projector then shows macOS's own placeholder "Choose to mirror or extend…". Choosing **Screen Mirroring → S2-TEK TV →
-  Choose Content → Extend** makes the **projector the main display**, so the LG goes black (the June blackout); the user
-  cancelled. **Fix ready:** `winamp-screen/scripts/keep-lg-main.swift` (build with `swiftc -O … -o keep-lg-main`, run
-  it, *then* click Extend). It waits for the 2nd display, then makes the LG main (origin 0,0), puts the projector to
-  its right, and turns mirroring off. It ran twice but the user didn't click Extend (stepped away). **Next:** run the
-  helper → user clicks Extend and doesn't cancel → verify with `system_profiler` → the 3-click output test.
-  Optional permanent fix: Displays → *When connected to TV* → Extend (stops the "Ask" step). Note that "Paul's
-  MacBook Air" appears in the Mac mini's Displays pane only because of Universal Control; it isn't a display.
+**✅ 2026-10-12: the macOS projector output WORKS.** Signed test DMG on the Mac mini → onn USB-C→HDMI cable → Vankyo
+projector (extended, LG main): **30 fps, ~40–53 ms delay, in time with the music**; video presets play. Details in
+`output-dev.md` 🟢 B2 block.
+
+**Projector setup that works (one machine, the Mac mini):** cable straight into a back USB-C port → macOS treats the
+projector as a "TV" and asks first → run `winamp-screen/scripts/keep-lg-main.swift` (Claude runs it), then the user
+picks **Screen Mirroring → S2-TEK TV → Choose Content → Extend**. The helper puts the LG back as main. Then in the app:
+**O → Display 2 → Fullscreen on open → Open output window**. (`D` toggles the stats readout.)
+
+**Next steps (pick with the user):**
+1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
+   desktop UI cleanup, caffeinate fix). See *On `main` but NOT in a released build* below.
+2. **Timeline output on the B2 pipe** (feed its composer canvas): the Timeline's routing/Composed Program is still
+   web-only.
+3. **Open question from the test:** the user said favorites "aren't here," but all **9 favorites are saved and all 9
+   presets exist** on the Mac mini (checked in the app's local storage + `presets/` folder). Ask where they saw
+   "none" (♥ tab vs. cycle panel). Also offered: remember cycle settings (Favorites only / Random / interval) across
+   launches. Today "Favorites only" resets to off on every launch.
+4. Optional: an in-app "make this my main screen" button (same fix as the helper).
 
 ## Current state
 
