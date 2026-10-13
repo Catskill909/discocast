@@ -22,9 +22,9 @@
 
 **Focus: macOS.** The Mac is what goes to the user's upcoming **live dance event with a projector**.
 
-1. **Deploy the version-number change in Coolify** (pushed 2026-10-13): the site shows *Version 0.9 (Beta) ·
-   Oct 12, 2026* and downloads save as `DiscoCast-Visualizer-0.9.dmg` / `-0.9-Windows.exe`. Check after deploy.
-   (Beta Oct 12 itself is already live and verified.)
+1. **Ship the User Guide screenshots in 0.9.1** (done in code 2026-10-13, not in a build yet): 14 real
+   screenshots in the in-app Help (`public/guide/`). They reach users with the next DMG/EXE: bump to 0.9.1 and add
+   a What's New line. Regenerate after UI changes: `node scripts/capture-guide-shots.mjs <song> <image.png>`.
 2. **Gig dry run on the Mac** (offered; not started): projector connected (setup below), a full set of
    favorites auto-cycle, a long mix, switching to other apps, maybe the Timeline. Find rough edges at home, not at
    the venue.
@@ -176,6 +176,10 @@ video lessons), `live-input-dev.md`, `discocast-admin-dev.md`.
 ## Changelog
 
 **2026-10-13**
+- **User Guide screenshots:** 14 close-ups (player, presets, cycling, audio tuning, output panel, Studio tabs,
+  layers, animate, timeline) in `winamp-screen/public/guide/`, made by `scripts/capture-guide-shots.mjs`.
+  The Help's Output section now explains *Send to a projector*; Virtual Camera is marked web-only there.
+- Version 0.9 is deployed and verified on the site.
 - Release numbering: Oct 12 release = **Version 0.9**; one version in `tauri.conf.json`; site shows it under the
   download buttons; downloads save as `DiscoCast-Visualizer-0.9.dmg` / `-0.9-Windows.exe`.
 
