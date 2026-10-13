@@ -39,7 +39,12 @@ in `main.rs` (covered window: 0 fps → 100 fps, measured). Test build with ever
 
 **Then the Output panel redesign (2026-10-12, `1624b77`):** display buttons, Fullscreen switch, Send/Stop button, Tips;
 dropdowns visible. Also fixed: desktop-only hiding didn't apply in the player (runtime `<style>` blocked by Tauri's
-CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg` (user to confirm).
+CSP hashing → moved to `src/platform.css`). Test build: `OUTPUT-TEST-5.dmg`: **user confirmed the new menu looks great.**
+
+**To check next:** in TEST-5 the user clicked the player's **Live** (🎤) button by accident and said the app froze and "the menu
+doesn't load". This likely matches the documented macOS limit in `winamp-screen/live-input-dev.md` (main page: the device
+picker can hang on first connect because the AudioContext was created without a user gesture). Reproduce in `tauri dev`
+before fixing; it's unrelated to the output work.
 
 **Next steps (pick with the user):**
 1. **Release prep:** hide the `D` readout by default; then build + ship (What's New: projector output window,
